@@ -5,9 +5,9 @@ from scipy import ndimage
 import os
 import random
 
-class PainterlyStyleTransfer:
+class StyleTransfer:
     def __init__(self):
-        """Initialize the painterly style transfer."""
+        """Initialize the style transfer."""
         pass
         
     def load_and_preprocess(self, content_path, style_path, target_size=(512, 512)):
@@ -315,13 +315,13 @@ class PainterlyStyleTransfer:
 
 
 if __name__ == "__main__":
-    style_transfer = PainterlyStyleTransfer()
+    style_transfer = StyleTransfer()
     
-    content_path = r"C:\Users\bhatt\Downloads\CPSC479_A0-1\CPSC479_A0\cpsc479\Final\input\download.jpg"
+    # Updated paths to match new directory structure
+    content_path = "assets/input/download.jpg"
+    style_path = "assets/reference/classical_art.jpg"
     
-    style_path = r"C:\Users\bhatt\Downloads\CPSC479_A0-1\CPSC479_A0\cpsc479\Final\Final\reference\classical_art.jpg"
-    
-    output_dir = r"C:\Users\bhatt\Downloads\CPSC479_A0-1\CPSC479_A0\cpsc479\Final\output"
+    output_dir = "assets/_results"
     os.makedirs(output_dir, exist_ok=True)
     
     try:

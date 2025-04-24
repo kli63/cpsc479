@@ -505,9 +505,9 @@ def process_all_images(input_dir, output_dir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract visual features from images using OpenCV.')
-    parser.add_argument('--input', default='Final\\input', 
+    parser.add_argument('--input', default='assets/input', 
                         help='Path to input directory containing images')
-    parser.add_argument('--output', default='Final\\output', 
+    parser.add_argument('--output', default='assets/_results', 
                         help='Path to output directory for results')
     args = parser.parse_args()
     
