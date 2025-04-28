@@ -1,2 +1,4 @@
 paper/
 src/__pycache__/
+src/wavelet_neural_transfer/
+src/wavelet_neural_transfer/__pycache__/
