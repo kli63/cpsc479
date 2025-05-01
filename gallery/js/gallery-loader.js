@@ -16,7 +16,7 @@ export class GalleryLoader {
     }
 
     // Create a frame with the given artwork texture
-    createArtworkFrame(texture, position, rotation, size = { width: 2, height: 1.5 }) {
+    createArtworkFrame(texture, position, rotation, size = { width: 2, height: 1.5 }, imagePath) {
         // Frame
         const frameWidth = size.width + 0.1;
         const frameHeight = size.height + 0.1;
@@ -29,6 +29,12 @@ export class GalleryLoader {
         
         // Create frame borders
         const frame = new THREE.Group();
+        
+        // Store the image path in the userData for later reference
+        frame.userData = {
+            isArtwork: true,
+            imagePath: imagePath
+        };
 
         // Top border
         const topBorder = new THREE.Mesh(
@@ -90,7 +96,8 @@ export class GalleryLoader {
                         texture,
                         position,
                         rotation,
-                        size
+                        size,
+                        imagePath  // Pass the image path to store in userData
                     );
                     this.scene.add(frame);
                     this.artworks.push(frame);

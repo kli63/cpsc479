@@ -55,6 +55,12 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
 
+// Raycaster for detecting hover and clicks on artworks
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredObject = null;
+let originalImageMap = new Map(); // Maps artwork mesh to original image path
+
 // Movement
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -62,9 +68,12 @@ let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
+let controlsActive = true;
 
 // Key events
 const onKeyDown = function (event) {
+    if (!controlsActive) return;
+    
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
@@ -81,6 +90,11 @@ const onKeyDown = function (event) {
         case 'ArrowRight':
         case 'KeyD':
             moveRight = true;
+            break;
+        case 'Escape':
+            if (document.getElementById('image-detail-overlay').style.display === 'flex') {
+                closeImageDetail();
+            }
             break;
     }
 };
@@ -109,9 +123,213 @@ const onKeyUp = function (event) {
 document.addEventListener('keydown', onKeyDown);
 document.addEventListener('keyup', onKeyUp);
 
+// Mouse events for raycasting
+document.addEventListener('mousemove', onMouseMove);
+document.addEventListener('click', onClick);
+
+function onMouseMove(event) {
+    if (!controls.isLocked) return;
+    
+    // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    
+    checkIntersection();
+}
+
+function onClick(event) {
+    if (controls.isLocked && hoveredObject) {
+        showImageDetail(hoveredObject);
+    } else if (!controls.isLocked) {
+        controls.lock();
+    }
+}
+
+function checkIntersection() {
+    // Update the raycaster with camera and mouse positions
+    raycaster.setFromCamera(mouse, camera);
+    
+    // Get all artwork in the scene
+    const artworks = scene.children.filter(child => 
+        child.userData && child.userData.isArtwork
+    );
+    
+    // Find intersections
+    const intersects = raycaster.intersectObjects(artworks, true);
+    
+    // Reset cursor
+    document.body.style.cursor = 'default';
+    
+    // Reset hovered object
+    if (hoveredObject) {
+        hoveredObject = null;
+    }
+    
+    // Check if we're hovering over an artwork
+    if (intersects.length > 0) {
+        // Get the artwork group (parent of the intersected object)
+        let object = intersects[0].object;
+        while (object.parent && !object.userData.isArtwork) {
+            object = object.parent;
+        }
+        
+        if (object.userData.isArtwork) {
+            document.body.style.cursor = 'pointer';
+            hoveredObject = object;
+        }
+    }
+}
+
+// Create image detail overlay
+function createImageDetailOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'image-detail-overlay';
+    overlay.style.display = 'none';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.zIndex = '100';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'row';
+    container.style.maxWidth = '90%';
+    container.style.maxHeight = '80%';
+    container.style.gap = '20px';
+    
+    // Styled comparison container
+    const comparisonContainer = document.createElement('div');
+    comparisonContainer.style.display = 'flex';
+    comparisonContainer.style.flexDirection = 'column';
+    comparisonContainer.style.alignItems = 'center';
+    
+    // Image containers
+    const styledImageContainer = document.createElement('div');
+    styledImageContainer.className = 'image-container';
+    styledImageContainer.style.display = 'flex';
+    styledImageContainer.style.flexDirection = 'column';
+    styledImageContainer.style.alignItems = 'center';
+    styledImageContainer.style.marginBottom = '20px';
+    
+    const originalImageContainer = document.createElement('div');
+    originalImageContainer.className = 'image-container';
+    originalImageContainer.style.display = 'flex';
+    originalImageContainer.style.flexDirection = 'column';
+    originalImageContainer.style.alignItems = 'center';
+    
+    // Image elements
+    const styledImage = document.createElement('img');
+    styledImage.id = 'styled-image';
+    styledImage.style.maxWidth = '100%';
+    styledImage.style.maxHeight = '60vh';
+    styledImage.style.objectFit = 'contain';
+    styledImage.style.border = '2px solid white';
+    
+    const originalImage = document.createElement('img');
+    originalImage.id = 'original-image';
+    originalImage.style.maxWidth = '100%';
+    originalImage.style.maxHeight = '60vh';
+    originalImage.style.objectFit = 'contain';
+    originalImage.style.border = '2px solid white';
+    
+    // Image labels
+    const styledLabel = document.createElement('h3');
+    styledLabel.textContent = 'Styled Image';
+    styledLabel.style.color = 'white';
+    styledLabel.style.fontFamily = 'Arial, sans-serif';
+    styledLabel.style.marginTop = '10px';
+    
+    const originalLabel = document.createElement('h3');
+    originalLabel.textContent = 'Original Image';
+    originalLabel.style.color = 'white';
+    originalLabel.style.fontFamily = 'Arial, sans-serif';
+    originalLabel.style.marginTop = '10px';
+    
+    // Close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.style.padding = '10px 20px';
+    closeButton.style.marginTop = '20px';
+    closeButton.style.backgroundColor = '#5588ff';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '5px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontFamily = 'Arial, sans-serif';
+    closeButton.style.fontSize = '16px';
+    
+    closeButton.addEventListener('click', closeImageDetail);
+    
+    // Append elements
+    styledImageContainer.appendChild(styledImage);
+    styledImageContainer.appendChild(styledLabel);
+    
+    originalImageContainer.appendChild(originalImage);
+    originalImageContainer.appendChild(originalLabel);
+    
+    container.appendChild(styledImageContainer);
+    container.appendChild(originalImageContainer);
+    
+    overlay.appendChild(container);
+    overlay.appendChild(closeButton);
+    
+    document.body.appendChild(overlay);
+}
+
+// Show image detail
+function showImageDetail(artwork) {
+    // Get image paths
+    const styledImagePath = artwork.userData.imagePath;
+    const originalImagePath = getOriginalImagePath(styledImagePath);
+    
+    // Display images
+    const styledImage = document.getElementById('styled-image');
+    const originalImage = document.getElementById('original-image');
+    
+    styledImage.src = styledImagePath;
+    originalImage.src = originalImagePath;
+    
+    // Show overlay
+    const overlay = document.getElementById('image-detail-overlay');
+    overlay.style.display = 'flex';
+    
+    // Disable controls
+    controls.unlock();
+    controlsActive = false;
+}
+
+// Close image detail
+function closeImageDetail() {
+    const overlay = document.getElementById('image-detail-overlay');
+    overlay.style.display = 'none';
+    
+    // Re-enable controls
+    controls.lock();
+    controlsActive = true;
+}
+
+// Import the OriginalImageMapper
+import { OriginalImageMapper } from './original-image-mapper.js';
+
+// Create an instance of the mapper
+const imageMapper = new OriginalImageMapper();
+
+// Get original image path from styled image path
+function getOriginalImagePath(styledImagePath) {
+    return imageMapper.getOriginalImagePath(styledImagePath);
+}
+
 // Click to lock controls
 document.addEventListener('click', function () {
-    controls.lock();
+    if (!controls.isLocked && controlsActive) {
+        controls.lock();
+    }
 });
 
 controls.addEventListener('lock', function () {
@@ -119,7 +337,9 @@ controls.addEventListener('lock', function () {
 });
 
 controls.addEventListener('unlock', function () {
-    document.getElementById('info').style.display = 'block';
+    if (controlsActive) {
+        document.getElementById('info').style.display = 'block';
+    }
 });
 
 // Lights
@@ -234,7 +454,8 @@ loadingManager.onLoad = function () {
 
 // Initialize the scene
 createRoom();
-addArtworkFrames();
+// Create image detail overlay
+createImageDetailOverlay();
 
 // Load artwork from style transfer project
 import { StyleTransferImageLoader } from './image-loader.js';
@@ -243,6 +464,13 @@ import { StyleTransferImageLoader } from './image-loader.js';
 const imageLoader = new StyleTransferImageLoader(scene, loadingManager);
 imageLoader.loadGallery(CONFIG.room).then(artworks => {
     console.log(`Loaded ${artworks.length} artworks into the gallery`);
+    
+    // Mark all artworks for interaction
+    artworks.forEach(artwork => {
+        artwork.userData.isArtwork = true;
+        artwork.userData.imagePath = artwork.userData.imagePath;
+    });
+    
 }).catch(error => {
     console.error('Failed to load artworks:', error);
 });
@@ -253,7 +481,7 @@ const clock = new THREE.Clock();
 function animate() {
     requestAnimationFrame(animate);
 
-    if (controls.isLocked) {
+    if (controls.isLocked && controlsActive) {
         const delta = Math.min(clock.getDelta(), 0.1);
 
         velocity.x -= velocity.x * 10.0 * delta;
