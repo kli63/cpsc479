@@ -6,7 +6,7 @@ echo "Starting the Style Transfer Gallery server..."
 if command -v python3 &> /dev/null; then
     echo "Starting server with Python 3..."
     cd "$(dirname "$0")/.."
-    python3 -m http.server
+    python3 -m http.server 8000
     exit 0
 fi
 
@@ -14,7 +14,7 @@ fi
 if command -v python &> /dev/null; then
     echo "Starting server with Python..."
     cd "$(dirname "$0")/.."
-    python -m http.server
+    python -m http.server 8000
     exit 0
 fi
 
@@ -26,7 +26,7 @@ if command -v npm &> /dev/null; then
     fi
     echo "Starting server with http-server..."
     cd "$(dirname "$0")/.."
-    http-server
+    http-server -p 8000
     exit 0
 fi
 
