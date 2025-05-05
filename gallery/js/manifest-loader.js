@@ -49,6 +49,12 @@ export class ManifestLoader {
         
         return styledImages.filter(path => !path.includes('_comparison.jpg'));
     }
+    
+    async getBestImages() {
+        const manifest = await this.loadManifest();
+        const bestImages = manifest.bestResults || [];
+        return bestImages.filter(path => !path.includes('_comparison.jpg'));
+    }
 
     async getPresetResults() {
         const manifest = await this.loadManifest();

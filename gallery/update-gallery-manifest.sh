@@ -43,6 +43,15 @@ find "$PROJECT_ROOT/model/results" -type f \( -name "*.jpg" -o -name "*.png" \) 
   echo "    \"/$rel_path\"," >> "$MANIFEST_FILE"
 done
 sed -i '$ s/,$//' "$MANIFEST_FILE"
+echo "  ]," >> "$MANIFEST_FILE"
+
+echo "  \"bestResults\": [" >> "$MANIFEST_FILE"
+mkdir -p "$PROJECT_ROOT/gallery/assets/best"
+find "$PROJECT_ROOT/gallery/assets/best" -type f \( -name "*.jpg" -o -name "*.png" \) | sort | while read -r file; do
+  rel_path="${file#$PROJECT_ROOT/}"
+  echo "    \"/$rel_path\"," >> "$MANIFEST_FILE"
+done
+sed -i '$ s/,$//' "$MANIFEST_FILE"
 echo "  ]" >> "$MANIFEST_FILE"
 
 echo "}" >> "$MANIFEST_FILE"

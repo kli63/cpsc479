@@ -9,8 +9,9 @@ export class ArtworkManager {
         this.styleTransferPath = '../model/results';
         this.contentImagesPath = '../model/assets/input';
         this.styleImagesPath = '../model/assets/reference';
+        this.bestImagesPath = './assets/best';
         this.artworks = [];
-        this.allowDuplicates = true;
+        this.allowDuplicates = false;
         this.manifestLoader = new ManifestLoader();
     }
 
@@ -18,11 +19,9 @@ export class ArtworkManager {
         const uniqueImagesMap = new Map();
         
         try {
-            // Use the manifest loader instead of server request
             const styledImages = await this.manifestLoader.getAllStyledImages();
             
             styledImages.forEach(imagePath => {
-                // Skip comparison images
                 if (imagePath.includes('_comparison')) {
                     return;
                 }
@@ -41,7 +40,6 @@ export class ArtworkManager {
         } catch (error) {
             console.error("Error loading styled images from manifest:", error);
             
-            // Fallback images if manifest fails
             const fallbackImages = [
                 `${this.styleTransferPath}/style_transfer_20250505_104324/0002_styled_with_0022.jpg`, 
                 `${this.styleTransferPath}/style_transfer_20250505_104421/0001_styled_with_0022.jpg`
@@ -62,7 +60,7 @@ export class ArtworkManager {
         const uniqueImages = Array.from(uniqueImagesMap.values());
         console.log(`Loaded ${uniqueImages.length} styled images from manifest`);
         
-        const requiredFeaturedCount = 6; 
+        const requiredFeaturedCount = 8; 
         const requiredRegularCount = 20;
         const totalRequired = requiredFeaturedCount + requiredRegularCount;
         
@@ -258,8 +256,8 @@ export class ArtworkManager {
         const wallHeight = centralWall.geometry.parameters.height;
         
         const rows = 2;
-        const cols = 3;
-        const frameWidth = wallWidth / (cols + 1) * 0.6;
+        const cols = 4;
+        const frameWidth = wallWidth / (cols + 2) * 0.9;
         const frameHeight = frameWidth * 0.75;
         
         for (let row = 0; row < rows; row++) {
@@ -267,12 +265,11 @@ export class ArtworkManager {
                 const index = row * cols + col;
                 if (index >= artworkPaths.length) break;
                 
-                const x = (col - (cols - 1) / 2) * (frameWidth * 1.2);
+                const x = (col - (cols - 1) / 2) * (frameWidth * 1.5);
                 
-                const heightPercent = 0.7 - (row * 0.4);
+                const heightPercent = row === 0 ? 0.7 : 0.25;
                 const y = wallHeight * heightPercent;
                 
-                // Calculate z-offset based on which side, to avoid z-fighting
                 const zOffset = isBackSide ? -0.05 : 0.05;
                 
                 const worldY = centralWall.parent ? 
@@ -366,15 +363,176 @@ export class ArtworkManager {
 
     async populateGallery(wallsMap) {
         try {
+            let bestImages = [];
+            try {
+                bestImages = await this.manifestLoader.getBestImages();
+            } catch (error) {
+                console.warn("Error loading best images, falling back to featured images");
+            }
+            
             const { featured, regular } = await this.getAllStyleTransferImages();
+            
+            let processedBestImages = bestImages.map(path => {
+                if (path.startsWith('/gallery/')) {
+                    return path.replace('/gallery/', './');
+                } else if (path.startsWith('/')) {
+                    return `.${path}`;
+                } else if (!path.startsWith('./')) {
+                    return `./${path}`;
+                }
+                return path;
+            });
+            
             const promises = [];
             
             if (wallsMap.central.front) {
-                const frontSideImages = featured.slice(0, 6);
-                const backSideImages = featured.slice(0, 6).reverse();
+                let frontWallImages = [];
+                let backWallImages = [];
+                const usedKeys = new Set();
                 
-                promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.front, frontSideImages, false));
-                promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.back, backSideImages, true));
+                const extractKey = (path) => {
+                    const filename = path.split('/').pop();
+                    const match = filename.match(/(\d+)_styled_with_(\d+)/);
+                    if (match) {
+                        return `${match[1]}_${match[2]}`;
+                    }
+                    return null;
+                };
+                
+                const filteredBestImages = processedBestImages.filter(path => !path.includes('_comparison'));
+                
+                const frontWallMax = 8;
+                const backWallMax = 8;
+                
+                let selectedForFront = 0;
+                let selectedForBack = 0;
+                
+                const frontWallKeys = new Set();
+                const backWallKeys = new Set();
+                
+                const bestImages = [...filteredBestImages].sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < bestImages.length; i++) {
+                    const path = bestImages[i];
+                    const key = extractKey(path);
+                    
+                    if (key && !usedKeys.has(key) && !frontWallKeys.has(key)) {
+                        usedKeys.add(key);
+                        
+                        if (selectedForFront < frontWallMax) {
+                            frontWallImages.push(path);
+                            frontWallKeys.add(key);
+                            selectedForFront++;
+                        }
+                    }
+                }
+                
+                const remainingBestImages = [...filteredBestImages].sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < remainingBestImages.length; i++) {
+                    const path = remainingBestImages[i];
+                    const key = extractKey(path);
+                    
+                    if (key && !usedKeys.has(key) && !backWallKeys.has(key)) {
+                        usedKeys.add(key);
+                        
+                        if (selectedForBack < backWallMax) {
+                            backWallImages.push(path);
+                            backWallKeys.add(key);
+                            selectedForBack++;
+                        }
+                    }
+                }
+                
+                const allImages = [...featured].sort(() => Math.random() - 0.5);
+                
+                while (frontWallImages.length < frontWallMax) {
+                    let added = false;
+                    for (let path of allImages) {
+                        if (frontWallImages.length >= frontWallMax) break;
+                        if (path.includes('_comparison')) continue;
+                        
+                        const key = extractKey(path);
+                        if (key && !frontWallKeys.has(key)) {
+                            usedKeys.add(key);
+                            frontWallKeys.add(key);
+                            frontWallImages.push(path);
+                            added = true;
+                        }
+                    }
+                    
+                    if (!added) {
+                        for (let i = 0; i < allImages.length; i++) {
+                            const randomIndex = Math.floor(Math.random() * allImages.length);
+                            const randomImage = allImages[randomIndex];
+                            if (!randomImage || randomImage.includes('_comparison')) continue;
+                            
+                            const key = extractKey(randomImage);
+                            if (key && !frontWallKeys.has(key)) {
+                                frontWallImages.push(randomImage);
+                                frontWallKeys.add(key);
+                                added = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!added && frontWallImages.length < frontWallMax) {
+                            const fallbackImage = allImages[0];
+                            if (fallbackImage && !fallbackImage.includes('_comparison')) {
+                                frontWallImages.push(fallbackImage);
+                            }
+                        }
+                    }
+                }
+                
+                while (backWallImages.length < backWallMax) {
+                    let added = false;
+                    for (let path of allImages) {
+                        if (backWallImages.length >= backWallMax) break;
+                        if (path.includes('_comparison')) continue;
+                        
+                        const key = extractKey(path);
+                        if (key && !backWallKeys.has(key)) {
+                            usedKeys.add(key);
+                            backWallKeys.add(key);
+                            backWallImages.push(path);
+                            added = true;
+                        }
+                    }
+                    
+                    if (!added) {
+                        for (let i = 0; i < allImages.length; i++) {
+                            const randomIndex = Math.floor(Math.random() * allImages.length);
+                            const randomImage = allImages[randomIndex];
+                            if (!randomImage || randomImage.includes('_comparison')) continue;
+                            
+                            const key = extractKey(randomImage);
+                            if (key && !backWallKeys.has(key) && !frontWallKeys.has(key)) {
+                                backWallImages.push(randomImage);
+                                backWallKeys.add(key);
+                                added = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!added && backWallImages.length < backWallMax) {
+                            for (let i = 0; i < allImages.length; i++) {
+                                const randomImage = allImages[i];
+                                if (!randomImage || randomImage.includes('_comparison')) continue;
+                                
+                                const key = extractKey(randomImage);
+                                if (key && !backWallKeys.has(key)) {
+                                    backWallImages.push(randomImage);
+                                    backWallKeys.add(key);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.front, frontWallImages, false));
+                promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.back, backWallImages, true));
             }
             
             let startIndex = 0;

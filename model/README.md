@@ -40,6 +40,25 @@ cd path/to/CPSC479/FP/model
 python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0005.jpg
 ```
 
+## Bulk Style Transfer Generator
+
+To generate multiple style transfers in parallel:
+
+```bash
+# Run with default settings (50 random combinations, 4 workers)
+./generate_combinations.py
+
+# Run with custom settings
+./generate_combinations.py --max_combinations 20 --workers 8 --steps 500 --size 768 --visualize
+```
+
+The script will:
+- Track progress in a JSON file
+- Resume from where it left off if interrupted
+- Select random combinations of content and style images
+- Run transfers in parallel
+- Update the gallery manifest when complete
+
 ## Command-line Arguments
 
 The style transfer model supports the following command-line arguments:

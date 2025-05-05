@@ -93,7 +93,7 @@ export class RoomBuilder {
         this.scene.add(westWall);
         this.wallsMap.west = westWall;
         
-        const centralWallWidth = this.config.width * 0.6;
+        const centralWallWidth = this.config.width * 0.9;
         const centralWallHeight = this.config.height * 0.9;
         const centralWallThickness = 0.3;
         
@@ -126,11 +126,9 @@ export class RoomBuilder {
     }
 
     addLighting() {
-        // Add ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
         
-        // Add directional lights for better illumination
         const directions = [
             { x: 1, y: 1, z: 0.5 },
             { x: -1, y: 1, z: 0.5 },

@@ -6,16 +6,30 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
-from models import WaveletOptimizedStyleTransfer
-from utils import (
-    load_image,
-    save_image,
-    create_comparison_image,
-    visualize_wavelet_decomposition,
-    visualize_frequency_spectrum,
-    visualize_loss_history,
-    create_multi_scale_visualization
-)
+# Try to import as a module first, then fall back to local import
+try:
+    from src.models import WaveletOptimizedStyleTransfer
+    from src.utils import (
+        load_image,
+        save_image,
+        create_comparison_image,
+        visualize_wavelet_decomposition,
+        visualize_frequency_spectrum,
+        visualize_loss_history,
+        create_multi_scale_visualization
+    )
+except ModuleNotFoundError:
+    # Direct import when run as a script
+    from models import WaveletOptimizedStyleTransfer
+    from utils import (
+        load_image,
+        save_image,
+        create_comparison_image,
+        visualize_wavelet_decomposition,
+        visualize_frequency_spectrum,
+        visualize_loss_history,
+        create_multi_scale_visualization
+    )
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Style Transfer using Wavelets')

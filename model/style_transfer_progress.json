@@ -1,0 +1,226 @@
+{
+  "completed": [
+    "0016_0032",
+    "0024_0027",
+    "0086_0029",
+    "0084_0028",
+    "0073_0028",
+    "0037_0013",
+    "0024_0019",
+    "0078_0022",
+    "0043_0012",
+    "0085_0032",
+    "0071_0014",
+    "0022_0014",
+    "0067_0022",
+    "0085_0029",
+    "0026_0029",
+    "0005_0021",
+    "0030_0027",
+    "0024_0018",
+    "0016_0016",
+    "0008_0022",
+    "0072_0003",
+    "0003_0029",
+    "0005_0010",
+    "0040_0012",
+    "0011_0003",
+    "0081_0016",
+    "0003_0011"
+  ],
+  "in_progress": [],
+  "pending": [],
+  "total_requested": 1,
+  "last_update": 1746476274.2383554,
+  "combinations": {
+    "0016_0032": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0016.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0032.jpg",
+      "content_id": "0016",
+      "style_id": "0032",
+      "key": "0016_0032"
+    },
+    "0024_0027": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0024.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0027.jpg",
+      "content_id": "0024",
+      "style_id": "0027",
+      "key": "0024_0027"
+    },
+    "0086_0029": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0086.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0029.jpg",
+      "content_id": "0086",
+      "style_id": "0029",
+      "key": "0086_0029"
+    },
+    "0084_0028": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0084.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0028.jpg",
+      "content_id": "0084",
+      "style_id": "0028",
+      "key": "0084_0028"
+    },
+    "0073_0028": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0073.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0028.jpg",
+      "content_id": "0073",
+      "style_id": "0028",
+      "key": "0073_0028"
+    },
+    "0037_0013": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0037.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0013.jpg",
+      "content_id": "0037",
+      "style_id": "0013",
+      "key": "0037_0013"
+    },
+    "0024_0019": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0024.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0019.jpg",
+      "content_id": "0024",
+      "style_id": "0019",
+      "key": "0024_0019"
+    },
+    "0078_0022": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0078.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0022.jpg",
+      "content_id": "0078",
+      "style_id": "0022",
+      "key": "0078_0022"
+    },
+    "0043_0012": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0043.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0012.jpg",
+      "content_id": "0043",
+      "style_id": "0012",
+      "key": "0043_0012"
+    },
+    "0085_0032": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0085.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0032.jpg",
+      "content_id": "0085",
+      "style_id": "0032",
+      "key": "0085_0032"
+    },
+    "0030_0027": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0030.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0027.jpg",
+      "content_id": "0030",
+      "style_id": "0027",
+      "key": "0030_0027"
+    },
+    "0071_0014": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0071.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0014.jpg",
+      "content_id": "0071",
+      "style_id": "0014",
+      "key": "0071_0014"
+    },
+    "0022_0014": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0022.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0014.jpg",
+      "content_id": "0022",
+      "style_id": "0014",
+      "key": "0022_0014"
+    },
+    "0067_0022": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0067.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0022.jpg",
+      "content_id": "0067",
+      "style_id": "0022",
+      "key": "0067_0022"
+    },
+    "0085_0029": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0085.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0029.jpg",
+      "content_id": "0085",
+      "style_id": "0029",
+      "key": "0085_0029"
+    },
+    "0026_0029": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0026.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0029.jpg",
+      "content_id": "0026",
+      "style_id": "0029",
+      "key": "0026_0029"
+    },
+    "0005_0021": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0005.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0021.jpg",
+      "content_id": "0005",
+      "style_id": "0021",
+      "key": "0005_0021"
+    },
+    "0024_0018": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0024.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0018.jpg",
+      "content_id": "0024",
+      "style_id": "0018",
+      "key": "0024_0018"
+    },
+    "0016_0016": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0016.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0016.jpg",
+      "content_id": "0016",
+      "style_id": "0016",
+      "key": "0016_0016"
+    },
+    "0008_0022": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0008.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0022.jpg",
+      "content_id": "0008",
+      "style_id": "0022",
+      "key": "0008_0022"
+    },
+    "0072_0003": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0072.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0003.jpg",
+      "content_id": "0072",
+      "style_id": "0003",
+      "key": "0072_0003"
+    },
+    "0003_0029": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0003.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0029.jpg",
+      "content_id": "0003",
+      "style_id": "0029",
+      "key": "0003_0029"
+    },
+    "0005_0010": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0005.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0010.jpg",
+      "content_id": "0005",
+      "style_id": "0010",
+      "key": "0005_0010"
+    },
+    "0040_0012": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0040.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0012.jpg",
+      "content_id": "0040",
+      "style_id": "0012",
+      "key": "0040_0012"
+    },
+    "0011_0003": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0011.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0003.jpg",
+      "content_id": "0011",
+      "style_id": "0003",
+      "key": "0011_0003"
+    },
+    "0081_0016": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0081.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0016.jpg",
+      "content_id": "0081",
+      "style_id": "0016",
+      "key": "0081_0016"
+    },
+    "0003_0011": {
+      "content": "/home/kli63/dev/CPSC479/FP/model/assets/input/0003.jpg",
+      "style": "/home/kli63/dev/CPSC479/FP/model/assets/reference/0011.jpg",
+      "content_id": "0003",
+      "style_id": "0011",
+      "key": "0003_0011"
+    }
+  }
+}

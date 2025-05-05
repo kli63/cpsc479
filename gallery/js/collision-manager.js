@@ -6,7 +6,7 @@ export class CollisionManager {
         this.camera = camera;
         this.config = config;
         this.colliders = [];
-        this.playerRadius = 0.5;
+        this.playerRadius = 0.8;
     }
     
     addBoxCollider(position, dimensions, rotation = { x: 0, y: 0, z: 0 }) {
@@ -66,7 +66,7 @@ export class CollisionManager {
             { width: wallThickness, height: height, depth: roomDimensions.depth },
         );
         
-        const centralWallWidth = roomDimensions.width * 0.6;
+        const centralWallWidth = roomDimensions.width * 0.9;
         const centralWallHeight = roomDimensions.height * 0.9;
         const centralWallThickness = 0.3;
         
