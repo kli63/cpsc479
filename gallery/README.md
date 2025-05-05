@@ -6,36 +6,39 @@ This is a Three.js-based virtual gallery application designed to showcase the st
 
 - `/js` - JavaScript files for the application
   - `main.js` - Main entry point and scene setup
-  - `gallery-loader.js` - Handles loading and displaying artwork
+  - `room-builder.js` - Creates the 3D gallery environment
+  - `artwork-manager.js` - Handles loading and displaying artwork
+  - `image-mapper.js` - Maps style transfer images to their sources
+  - `collision-manager.js` - Handles collision detection for navigation
 - `/css` - Stylesheets
-- `/assets` - Additional assets needed for the gallery (textures, models, etc.)
-- `/models` - 3D models for the gallery environment
 
-## Getting Started
+## Running the Gallery
 
-To run this application locally, you need to serve it through a web server due to browser security restrictions when loading files via JavaScript.
-
-### Using Python's built-in HTTP server:
+To run the gallery:
 
 ```bash
-python -m http.server
+# Navigate to the gallery directory
+cd path/to/CPSC479/FP/gallery
+
+# Make the scripts executable (if needed)
+chmod +x start-gallery.sh update-gallery-manifest.sh
+
+# Run the gallery
+./start-gallery.sh
 ```
 
-Then open your browser and navigate to `http://localhost:8000/gallery`
+This will:
+1. Generate a manifest file of all available images
+2. Start a local web server on port 8000
+3. Navigate to: http://localhost:8000/gallery/
 
-### Using Node.js and http-server:
+### GitHub Pages Hosting
 
-1. Install http-server if you haven't already:
-   ```bash
-   npm install -g http-server
-   ```
+The gallery works with GitHub Pages:
 
-2. Run the server:
-   ```bash
-   http-server
-   ```
-
-3. Open your browser and navigate to `http://localhost:8080/gallery`
+1. Run `./update-gallery-manifest.sh` to generate the manifest
+2. Add all files to your repository
+3. Enable GitHub Pages in your repository settings
 
 ## Features
 
@@ -46,7 +49,22 @@ Then open your browser and navigate to `http://localhost:8000/gallery`
 
 ## Integration with Style Transfer Project
 
-The gallery is designed to display the style transfer images from the `model/assets/_results` directory. To add new images to the gallery, add them to the appropriate directory and update the application to include them in the gallery.
+The gallery dynamically loads style transfer images from the `model/results/` directory. When you run style transfer to create new images, they will automatically appear in the gallery on the next reload.
+
+### Gallery Navigation
+
+- **Move**: WASD keys or arrow keys
+- **Look around**: Mouse movement
+- **Select artwork**: Click on any framed image
+- **Close details**: ESC key or click the close button
+- **Start gallery**: Click anywhere in the center of the screen
+
+### How Images Are Organized
+
+The gallery shows:
+- Content images from `model/assets/input/`
+- Style images from `model/assets/reference/`
+- Style transfer results from `model/results/`
 
 ## Future Enhancements
 

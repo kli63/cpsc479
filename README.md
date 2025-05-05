@@ -1,57 +1,62 @@
-# 3D Virtual Gallery for Style Transfer Project
+# Wavelet-Based Neural Style Transfer with 3D Gallery
 
-This is a Three.js-based virtual gallery application designed to showcase the style transfer images from the computational photography project.
+This project combines wavelet-based neural style transfer with a 3D gallery to display results.
 
-## Structure
+## Project Components
 
-- `/js` - JavaScript files for the application
-  - `main.js` - Main entry point and scene setup
-  - `gallery-loader.js` - Handles loading and displaying artwork
-- `/css` - Stylesheets
-- `/assets` - Additional assets needed for the gallery (textures, models, etc.)
-- `/models` - 3D models for the gallery environment
+- `/model` - Neural style transfer implementation
+  - Style transfer using wavelet transforms
+  - Command-line interface for processing images
+  - Image assets and style references
 
-## Getting Started
+- `/gallery` - 3D gallery viewer
+  - Three.js-based virtual environment
+  - First-person navigation
+  - Display of original and styled images
 
-To run this application locally, you need to serve it through a web server due to browser security restrictions when loading files via JavaScript.
+## Quick Start
 
-### Using Python's built-in HTTP server:
+To run the gallery:
 
 ```bash
-python -m http.server
+# Go to gallery directory
+cd path/to/CPSC479/FP/gallery
+
+# Start
+./start-gallery.sh
+
+# Open in browser
+http://localhost:8000/gallery/
 ```
 
-Then open your browser and navigate to `http://localhost:8000/gallery`
+## Gallery Features
 
-### Using Node.js and http-server:
+- **Navigation**: WASD keys or arrow keys to move, mouse to look around
+- **Interaction**: Click on artwork to view details
+- **Content Display**: See original content, style reference, and result side-by-side
+- **Dynamic Loading**: Automatically discovers and displays new style transfer results
+- **Responsive Design**: Works on different screen sizes and devices
 
-1. Install http-server if you haven't already:
-   ```bash
-   npm install -g http-server
-   ```
+## Using the Style Transfer Model
 
-2. Run the server:
-   ```bash
-   http-server
-   ```
+To run the style transfer model:
 
-3. Open your browser and navigate to `http://localhost:8080/gallery`
+```bash
+# Navigate to the model directory
+cd path/to/CPSC479/FP/model
 
-## Features
+# Run style transfer with default parameters
+python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg --output results/my_output.jpg
+```
 
-- First-person navigation using WASD keys and mouse
-- Gallery environment with wall-mounted frames
-- Dynamic loading of style-transferred images
-- Customizable gallery layout
+The results will automatically appear in the gallery on the next launch.
 
-## Integration with Style Transfer Project
+## Project Structure
 
-The gallery is designed to display the style transfer images from the `model/assets/_results` directory. To add new images to the gallery, add them to the appropriate directory and update the application to include them in the gallery.
+- `model/src/` - Core neural style transfer implementation
+- `model/assets/` - Content and style images
+- `model/results/` - Generated output images
+- `gallery/js/` - 3D gallery implementation
+- `gallery/css/` - Styling for the gallery interface
 
-## Future Enhancements
-
-- Interactive elements for each artwork (zoom, information panel)
-- Different gallery layouts/rooms
-- Ambient audio
-- Information panels about the style transfer technique
-- Before/after comparison views
+See README files in individual directories for more detailed information.

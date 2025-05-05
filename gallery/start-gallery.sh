@@ -2,7 +2,8 @@
 
 echo "Starting the Style Transfer Gallery server..."
 
-# Check if python3 is available
+echo "Updating gallery manifest..."
+./update-gallery-manifest.sh
 if command -v python3 &> /dev/null; then
     echo "Starting server with Python 3..."
     cd "$(dirname "$0")/.."
@@ -10,7 +11,6 @@ if command -v python3 &> /dev/null; then
     exit 0
 fi
 
-# Check if python (could be Python 2 or 3) is available
 if command -v python &> /dev/null; then
     echo "Starting server with Python..."
     cd "$(dirname "$0")/.."
@@ -18,7 +18,6 @@ if command -v python &> /dev/null; then
     exit 0
 fi
 
-# Check if npm and http-server are available
 if command -v npm &> /dev/null; then
     if ! command -v http-server &> /dev/null; then
         echo "Installing http-server..."

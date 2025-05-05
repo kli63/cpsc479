@@ -9,7 +9,6 @@ export class CollisionManager {
         this.playerRadius = 0.5;
     }
     
-    // Add box collider to represent walls
     addBoxCollider(position, dimensions, rotation = { x: 0, y: 0, z: 0 }) {
         const collider = {
             type: 'box',
@@ -20,7 +19,6 @@ export class CollisionManager {
         
         this.colliders.push(collider);
         
-        // Debug: visualize colliders
         if (this.config.debug) {
             const boxGeometry = new THREE.BoxGeometry(
                 dimensions.width, 
@@ -42,38 +40,32 @@ export class CollisionManager {
         return collider;
     }
     
-    // Add wall colliders from room dimensions
     addWallColliders(roomDimensions) {
         const wallThickness = 0.5;
         const halfWidth = roomDimensions.width / 2;
         const halfDepth = roomDimensions.depth / 2;
         const height = roomDimensions.height;
         
-        // North wall
         this.addBoxCollider(
             { x: 0, y: height/2, z: -halfDepth },
             { width: roomDimensions.width, height: height, depth: wallThickness }
         );
         
-        // South wall
         this.addBoxCollider(
             { x: 0, y: height/2, z: halfDepth },
             { width: roomDimensions.width, height: height, depth: wallThickness }
         );
         
-        // East wall
         this.addBoxCollider(
             { x: halfWidth, y: height/2, z: 0 },
             { width: wallThickness, height: height, depth: roomDimensions.depth },
         );
         
-        // West wall
         this.addBoxCollider(
             { x: -halfWidth, y: height/2, z: 0 },
             { width: wallThickness, height: height, depth: roomDimensions.depth },
         );
         
-        // Central wall
         const centralWallWidth = roomDimensions.width * 0.6;
         const centralWallHeight = roomDimensions.height * 0.9;
         const centralWallThickness = 0.3;
@@ -84,7 +76,6 @@ export class CollisionManager {
         );
     }
     
-    // Check if new position would collide with any walls
     checkCollision(newPosition) {
         for (const collider of this.colliders) {
             if (collider.type === 'box') {
@@ -124,14 +115,11 @@ export class CollisionManager {
         return distanceSquared < (this.playerRadius * this.playerRadius);
     }
     
-    // Resolve collision by adjusting position
     resolveCollision(currentPosition, newPosition) {
-        // If no collision, allow move
         if (!this.checkCollision(newPosition)) {
             return newPosition;
         }
         
-        // Try to slide along walls
         const slideX = { x: newPosition.x, y: currentPosition.y, z: currentPosition.z };
         if (!this.checkCollision(slideX)) {
             return slideX;
@@ -142,7 +130,6 @@ export class CollisionManager {
             return slideZ;
         }
         
-        // Both directions blocked, stay in place
         return currentPosition;
     }
 }

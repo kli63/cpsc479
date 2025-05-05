@@ -5,14 +5,13 @@ import { ArtworkManager } from './artwork-manager.js';
 import { ImageMapper } from './image-mapper.js';
 import { CollisionManager } from './collision-manager.js';
 
-// Gallery configuration
 const CONFIG = {
     room: {
         width: 30,
         height: 6,
         depth: 30
     },
-    debug: false, // Set to true to visualize colliders
+    debug: false,
     camera: {
         fov: 75,
         near: 0.1,
@@ -29,11 +28,9 @@ const CONFIG = {
     }
 };
 
-// Scene setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111111);
 
-// Camera setup
 const camera = new THREE.PerspectiveCamera(
     CONFIG.camera.fov,
     window.innerWidth / window.innerHeight,
@@ -46,7 +43,6 @@ camera.position.set(
     CONFIG.camera.position.z
 );
 
-// Renderer setup
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -54,16 +50,13 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// Controls setup
 const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
 
-// Raycaster for detecting hover and clicks on artworks
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let hoveredObject = null;
 
-// Movement variables
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 let moveForward = false;
@@ -72,7 +65,6 @@ let moveLeft = false;
 let moveRight = false;
 let controlsActive = true;
 
-// Key events
 const onKeyDown = function (event) {
     switch (event.code) {
         case 'ArrowUp':
@@ -123,14 +115,12 @@ const onKeyUp = function (event) {
 document.addEventListener('keydown', onKeyDown);
 document.addEventListener('keyup', onKeyUp);
 
-// Mouse events for raycasting
 document.addEventListener('mousemove', onMouseMove);
 document.addEventListener('click', onClick);
 
 function onMouseMove(event) {
     if (!controls.isLocked) return;
     
-    // Calculate mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     
@@ -138,9 +128,9 @@ function onMouseMove(event) {
 }
 
 function onClick(event) {
-    if (controls.isLocked && hoveredObject) {
+    if (controls.isLocked && hoveredObject && hoveredObject.userData && hoveredObject.userData.isArtwork) {
         showImageDetail(hoveredObject);
-    } else if (!controls.isLocked) {
+    } else if (!controls.isLocked && controlsActive) {
         controls.lock();
     }
 }
@@ -148,7 +138,6 @@ function onClick(event) {
 function checkIntersection() {
     raycaster.setFromCamera(mouse, camera);
     
-    // Get all artwork in the scene
     const artworks = scene.children.filter(child => 
         child.userData && child.userData.isArtwork
     );
@@ -157,9 +146,7 @@ function checkIntersection() {
     
     document.body.style.cursor = 'default';
     
-    // Clear previous hover state
     if (hoveredObject) {
-        // Remove hover effect from previously hovered object
         if (hoveredObject.userData && hoveredObject.userData.setHover) {
             hoveredObject.userData.setHover(false);
         }
@@ -176,7 +163,6 @@ function checkIntersection() {
             document.body.style.cursor = 'pointer';
             hoveredObject = object;
             
-            // Apply hover effect
             if (hoveredObject.userData && hoveredObject.userData.setHover) {
                 hoveredObject.userData.setHover(true);
             }
@@ -184,7 +170,6 @@ function checkIntersection() {
     }
 }
 
-// Create image detail overlay
 function createImageDetailOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'image-detail-overlay';
@@ -194,22 +179,29 @@ function createImageDetailOverlay() {
     overlay.style.left = '0';
     overlay.style.width = '100%';
     overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
     overlay.style.zIndex = '100';
     overlay.style.flexDirection = 'column';
     overlay.style.justifyContent = 'center';
     overlay.style.alignItems = 'center';
+    overlay.style.padding = '20px';
+    overlay.style.boxSizing = 'border-box';
     
     const container = document.createElement('div');
+    container.id = 'image-detail-container';
     container.style.display = 'flex';
-    container.style.flexDirection = 'row';
+    container.style.flexDirection = window.innerWidth < 768 ? 'column' : 'row';
     container.style.flexWrap = 'wrap';
     container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
     container.style.maxWidth = '95%';
-    container.style.maxHeight = '85%';
+    container.style.maxHeight = '85vh';
     container.style.gap = '20px';
+    container.style.overflowY = 'auto';
+    container.style.borderRadius = '10px';
+    container.style.padding = '20px';
+    container.style.backgroundColor = 'rgba(30, 30, 30, 0.7)';
     
-    // Title
     const title = document.createElement('h2');
     title.textContent = 'Style Transfer Details';
     title.style.color = 'white';
@@ -217,28 +209,26 @@ function createImageDetailOverlay() {
     title.style.width = '100%';
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';
+    title.style.fontSize = window.innerWidth < 768 ? '24px' : '28px';
+    title.style.fontWeight = '600';
+    title.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.5)';
     container.appendChild(title);
     
-    // Create the three image containers
-    // 1. Original image
     const originalImageContainer = createImageContainer('Original Image');
     const originalImage = createImageElement('original-image');
     originalImageContainer.appendChild(originalImage);
     container.appendChild(originalImageContainer);
     
-    // 2. Style reference image
     const styleImageContainer = createImageContainer('Style Reference');
     const styleImage = createImageElement('style-image');
     styleImageContainer.appendChild(styleImage);
     container.appendChild(styleImageContainer);
     
-    // 3. Final styled result
     const styledImageContainer = createImageContainer('Final Result');
     const styledImage = createImageElement('styled-image');
     styledImageContainer.appendChild(styledImage);
     container.appendChild(styledImageContainer);
     
-    // Close button
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Close';
     closeButton.style.padding = '12px 24px';
@@ -251,15 +241,43 @@ function createImageDetailOverlay() {
     closeButton.style.fontFamily = 'Arial, sans-serif';
     closeButton.style.fontSize = '16px';
     closeButton.style.fontWeight = 'bold';
+    closeButton.style.transition = 'background-color 0.2s ease';
+    closeButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.2)';
+    
+    closeButton.addEventListener('mouseover', function() {
+        closeButton.style.backgroundColor = '#4477ee';
+    });
+    
+    closeButton.addEventListener('mouseout', function() {
+        closeButton.style.backgroundColor = '#5588ff';
+    });
     
     closeButton.addEventListener('click', closeImageDetail);
+    
+    const keyListener = function(e) {
+        if (e.key === 'Escape') {
+            closeImageDetail();
+        }
+    };
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closeImageDetail();
+        }
+    });
+    
+    document.addEventListener('keydown', keyListener);
     
     overlay.appendChild(container);
     overlay.appendChild(closeButton);
     
+    function closeImageDetailInternal() {
+        document.removeEventListener('keydown', keyListener);
+        closeImageDetail();
+    }
+    
     document.body.appendChild(overlay);
     
-    // Helper function to create image containers
     function createImageContainer(labelText) {
         const container = document.createElement('div');
         container.className = 'image-container';
@@ -269,73 +287,124 @@ function createImageDetailOverlay() {
         container.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
         container.style.padding = '15px';
         container.style.borderRadius = '8px';
-        container.style.transition = 'transform 0.2s ease';
+        container.style.transition = 'all 0.3s ease';
+        container.style.flexGrow = '1';
+        container.style.flexBasis = window.innerWidth < 768 ? '100%' : '30%';
+        container.style.minWidth = window.innerWidth < 768 ? '100%' : '250px';
+        container.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+        container.style.margin = '5px';
         
         const label = document.createElement('h3');
         label.textContent = labelText;
         label.style.color = 'white';
         label.style.fontFamily = 'Arial, sans-serif';
-        label.style.marginTop = '10px';
+        label.style.margin = '10px 0';
+        label.style.fontSize = window.innerWidth < 768 ? '16px' : '18px';
+        label.style.textAlign = 'center';
+        label.style.width = '100%';
         
         container.appendChild(label);
         
         return container;
     }
     
-    // Helper function to create image elements
     function createImageElement(id) {
         const img = document.createElement('img');
         img.id = id;
+        img.style.width = '100%';
         img.style.maxWidth = '100%';
-        img.style.maxHeight = '50vh';
+        img.style.maxHeight = window.innerWidth < 768 ? '30vh' : '50vh';
         img.style.objectFit = 'contain';
-        img.style.border = '2px solid white';
+        img.style.border = '2px solid rgba(255, 255, 255, 0.7)';
+        img.style.borderRadius = '4px';
         img.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.5)';
+        img.style.transition = 'transform 0.3s ease';
+        img.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+        
+        img.addEventListener('load', function() {
+            img.style.opacity = '1';
+        });
+        
+        img.style.opacity = '0';
         
         return img;
     }
 }
 
-// Create image mapper
 const imageMapper = new ImageMapper();
 
-// Show image detail
 function showImageDetail(artwork) {
+    if (!artwork || !artwork.userData) return;
+    
     const styledImagePath = artwork.userData.imagePath;
-    const originalImagePath = imageMapper.getOriginalImagePath(styledImagePath);
-    const styleImagePath = imageMapper.getStyleImagePath(styledImagePath);
+    if (!styledImagePath) return;
+    
+    let originalImagePath, styleImagePath;
+    
+    if (artwork.userData.metadata) {
+        originalImagePath = artwork.userData.metadata.contentImage;
+        styleImagePath = artwork.userData.metadata.styleImage;
+    } else {
+        originalImagePath = imageMapper.getOriginalImagePath(styledImagePath);
+        styleImagePath = imageMapper.getStyleImagePath(styledImagePath);
+    }
     
     const styledImage = document.getElementById('styled-image');
     const originalImage = document.getElementById('original-image');
     const styleImage = document.getElementById('style-image');
     
-    styledImage.src = styledImagePath;
-    originalImage.src = originalImagePath;
+    if (!styledImage || !originalImage || !styleImage) return;
     
-    if (styleImagePath && styleImagePath !== '') {
-        styleImage.src = styleImagePath;
-        styleImage.parentElement.style.display = 'flex';
-    } else {
-        styleImage.parentElement.style.display = 'none';
-    }
+    styledImage.src = '';
+    originalImage.src = '';
+    styleImage.src = '';
     
-    const overlay = document.getElementById('image-detail-overlay');
-    overlay.style.display = 'flex';
-    
-    controls.unlock();
-    controlsActive = false;
+    setTimeout(() => {
+        styledImage.src = styledImagePath;
+        originalImage.src = originalImagePath;
+        
+        if (styleImagePath && styleImagePath !== '') {
+            styleImage.src = styleImagePath;
+            styleImage.parentElement.style.display = 'flex';
+        } else {
+            styleImage.parentElement.style.display = 'none';
+        }
+        
+        const overlay = document.getElementById('image-detail-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            updateOverlayLayout();
+            
+            setTimeout(() => {
+                overlay.classList.add('visible');
+            }, 10);
+        }
+        
+        controls.unlock();
+        controlsActive = false;
+    }, 10);
 }
 
-// Close image detail
 function closeImageDetail() {
     const overlay = document.getElementById('image-detail-overlay');
-    overlay.style.display = 'none';
+    if (!overlay) return;
     
-    controls.lock();
-    controlsActive = true;
+    overlay.classList.remove('visible');
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        
+        const images = overlay.querySelectorAll('img');
+        images.forEach(img => {
+            img.src = '';
+            img.style.opacity = '0';
+        });
+        
+        controls.lock();
+        controlsActive = true;
+    }, 300);
 }
 
-// Click to lock controls
 document.addEventListener('click', function () {
     if (!controls.isLocked && controlsActive) {
         controls.lock();
@@ -352,7 +421,6 @@ controls.addEventListener('unlock', function () {
     }
 });
 
-// Loading manager to track progress
 const loadingManager = new THREE.LoadingManager();
 loadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
     const progressBar = document.querySelector('.progress-bar-fill');
@@ -363,28 +431,21 @@ loadingManager.onLoad = function () {
     document.getElementById('loading-screen').style.display = 'none';
 };
 
-// Initialize the gallery
 async function initGallery() {
-    // Build the room
     const roomBuilder = new RoomBuilder(scene);
     const wallsMap = roomBuilder.buildRoom(CONFIG.room);
     
-    // Setup collision detection
     const collisionManager = new CollisionManager(scene, camera, CONFIG);
     collisionManager.addWallColliders(CONFIG.room);
     
-    // Assign to global scope for use in animate loop
     window.collisionManager = collisionManager;
     
-    // Create image detail overlay
     createImageDetailOverlay();
     
-    // Load and place artwork
     const artworkManager = new ArtworkManager(scene, loadingManager);
     await artworkManager.populateGallery(wallsMap);
 }
 
-// Animation loop
 const clock = new THREE.Clock();
 
 function animate() {
@@ -442,9 +503,39 @@ function updateOverlayLayout() {
             if (window.innerWidth < 768) {
                 container.style.flexDirection = 'column';
                 container.style.maxWidth = '95%';
+                container.style.maxHeight = '90vh';
+                container.style.overflowY = 'auto';
+                
+                const imageContainers = container.querySelectorAll('.image-container');
+                imageContainers.forEach(imgContainer => {
+                    imgContainer.style.width = '100%';
+                    imgContainer.style.maxWidth = '100%';
+                    imgContainer.style.marginBottom = '20px';
+                });
+                
+                const images = container.querySelectorAll('img');
+                images.forEach(img => {
+                    img.style.maxHeight = '30vh';
+                    img.style.objectFit = 'contain';
+                });
             } else {
                 container.style.flexDirection = 'row';
-                container.style.maxWidth = '90%';
+                container.style.maxWidth = '95%';
+                container.style.flexWrap = 'wrap';
+                container.style.maxHeight = '85vh';
+                container.style.overflowY = 'auto';
+                
+                const imageContainers = container.querySelectorAll('.image-container');
+                imageContainers.forEach(imgContainer => {
+                    imgContainer.style.width = window.innerWidth < 1200 ? '45%' : '30%';
+                    imgContainer.style.marginBottom = '10px';
+                });
+                
+                const images = container.querySelectorAll('img');
+                images.forEach(img => {
+                    img.style.maxHeight = '50vh';
+                    img.style.objectFit = 'contain';
+                });
             }
         }
     }
@@ -459,6 +550,5 @@ window.addEventListener('resize', function () {
     updateOverlayLayout();
 });
 
-// Start the gallery
 initGallery();
 animate();

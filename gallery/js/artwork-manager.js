@@ -1,77 +1,115 @@
 import * as THREE from 'three';
+import { ManifestLoader } from './manifest-loader.js';
 
 export class ArtworkManager {
     constructor(scene, loadingManager) {
         this.scene = scene;
         this.loadingManager = loadingManager || new THREE.LoadingManager();
         this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-        this.styleTransferPath = '../model/assets/_results';
+        this.styleTransferPath = '../model/results';
+        this.contentImagesPath = '../model/assets/input';
+        this.styleImagesPath = '../model/assets/reference';
         this.artworks = [];
+        this.allowDuplicates = true;
+        this.manifestLoader = new ManifestLoader();
     }
 
-    // Get all style transfer images from the results folder
     async getAllStyleTransferImages() {
-        // Filter images that are clearly result images
-        const patternMatchers = [
-            /_painterly\.png$/,
-            /_classical\.png$/,
-            /_dramatic\.png$/,
-            /_balanced\.png$/,
-            /_styled_with_.*\.jpg$/,
-            /portrait_.*\.jpg$/,
-            /landscape_.*\.jpg$/,
-            /cityscape_.*\.jpg$/
-        ];
+        const uniqueImagesMap = new Map();
         
-        // Featured images for the central wall
-        const featuredImages = [
-            `${this.styleTransferPath}/style_transfer_comparison.png`,
-            `${this.styleTransferPath}/best_result.jpg`,
-            `${this.styleTransferPath}/0028_0011_all_presets.png`,
-            `${this.styleTransferPath}/0031_0022_all_presets.png`,
-            `${this.styleTransferPath}/0032_0024_all_presets.png`,
-            `${this.styleTransferPath}/0029_0009_all_presets.png`
-        ];
+        try {
+            // Use the manifest loader instead of server request
+            const styledImages = await this.manifestLoader.getAllStyledImages();
+            
+            styledImages.forEach(imagePath => {
+                // Skip comparison images
+                if (imagePath.includes('_comparison')) {
+                    return;
+                }
+                
+                const relPath = imagePath.startsWith('/') ? `..${imagePath}` : imagePath;
+                const parts = relPath.split('/');
+                const filename = parts[parts.length - 1];
+                const match = filename.match(/(\d+)_styled_with_(\d+)/) || 
+                             filename.match(/(\d+)_(\d+)_/);
+                
+                if (match) {
+                    const key = `${match[1]}_${match[2]}`;
+                    uniqueImagesMap.set(key, relPath);
+                }
+            });
+        } catch (error) {
+            console.error("Error loading styled images from manifest:", error);
+            
+            // Fallback images if manifest fails
+            const fallbackImages = [
+                `${this.styleTransferPath}/style_transfer_20250505_104324/0002_styled_with_0022.jpg`, 
+                `${this.styleTransferPath}/style_transfer_20250505_104421/0001_styled_with_0022.jpg`
+            ];
+            
+            fallbackImages.forEach(imagePath => {
+                const parts = imagePath.split('/');
+                const filename = parts[parts.length - 1];
+                const match = filename.match(/(\d+)_styled_with_(\d+)/);
+                
+                if (match) {
+                    const key = `${match[1]}_${match[2]}`;
+                    uniqueImagesMap.set(key, imagePath);
+                }
+            });
+        }
         
-        // Regular style transfer images
-        const styleTransferImages = [
-            `${this.styleTransferPath}/0028_0011_painterly.png`,
-            `${this.styleTransferPath}/0028_0011_classical.png`,
-            `${this.styleTransferPath}/0028_0011_dramatic.png`,
-            `${this.styleTransferPath}/0028_0011_balanced.png`,
-            `${this.styleTransferPath}/0031_0022_painterly.png`,
-            `${this.styleTransferPath}/0031_0022_classical.png`,
-            `${this.styleTransferPath}/0031_0022_dramatic.png`,
-            `${this.styleTransferPath}/0031_0022_balanced.png`,
-            `${this.styleTransferPath}/0032_0024_painterly.png`,
-            `${this.styleTransferPath}/0032_0024_classical.png`,
-            `${this.styleTransferPath}/0032_0024_dramatic.png`,
-            `${this.styleTransferPath}/0032_0024_balanced.png`,
-            `${this.styleTransferPath}/0029_0009_painterly.png`,
-            `${this.styleTransferPath}/0029_0009_classical.png`,
-            `${this.styleTransferPath}/0029_0009_dramatic.png`,
-            `${this.styleTransferPath}/0029_0009_balanced.png`,
-            `${this.styleTransferPath}/0075_0022_painterly.png`,
-            `${this.styleTransferPath}/0075_0005_painterly.png`,
-            `${this.styleTransferPath}/0002_0022_painterly.png`,
-            `${this.styleTransferPath}/0002_0005_painterly.png`,
-            `${this.styleTransferPath}/0024_0022_painterly.png`,
-            `${this.styleTransferPath}/0024_0005_painterly.png`,
-            `${this.styleTransferPath}/portrait_enhanced.jpg`,
-            `${this.styleTransferPath}/portrait_starry_night.jpg`,
-            `${this.styleTransferPath}/landscape_enhanced.jpg`,
-            `${this.styleTransferPath}/landscape_abstract.jpg`,
-            `${this.styleTransferPath}/cityscape_enhanced.jpg`,
-            `${this.styleTransferPath}/cityscape_starry_night.jpg`
-        ];
+        const uniqueImages = Array.from(uniqueImagesMap.values());
+        console.log(`Loaded ${uniqueImages.length} styled images from manifest`);
+        
+        const requiredFeaturedCount = 6; 
+        const requiredRegularCount = 20;
+        const totalRequired = requiredFeaturedCount + requiredRegularCount;
+        
+        let featuredImages, regularImages;
+        
+        if (this.allowDuplicates && uniqueImages.length < totalRequired) {
+            const duplicatedSet = [];
+            
+            while (duplicatedSet.length < totalRequired) {
+                duplicatedSet.push(...uniqueImages);
+            }
+            
+            const shuffled = this.shuffleArray(duplicatedSet);
+            featuredImages = shuffled.slice(0, requiredFeaturedCount);
+            regularImages = shuffled.slice(requiredFeaturedCount, totalRequired);
+        } else {
+            const shuffled = this.shuffleArray([...uniqueImages]);
+            featuredImages = shuffled.slice(0, Math.min(requiredFeaturedCount, shuffled.length));
+            
+            const remainingForRegular = Math.max(0, shuffled.length - requiredFeaturedCount);
+            regularImages = shuffled.slice(requiredFeaturedCount, requiredFeaturedCount + remainingForRegular);
+        }
         
         return {
             featured: featuredImages,
-            regular: this.shuffleArray(styleTransferImages)
+            regular: regularImages
         };
     }
     
-    // Shuffle array for random selection
+    getImageMetadata(imagePath) {
+        const filename = imagePath.split('/').pop();
+        const match = filename.match(/(\d+)_styled_with_(\d+)/);
+        
+        if (match) {
+            const contentId = match[1];
+            const styleId = match[2];
+            
+            return {
+                contentImage: `../model/assets/input/${contentId}.jpg`,
+                styleImage: `../model/assets/reference/${styleId}.jpg`,
+                comparisonImage: null
+            };
+        }
+        
+        return null;
+    }
+    
     shuffleArray(array) {
         const shuffled = array.slice();
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -81,20 +119,17 @@ export class ArtworkManager {
         return shuffled;
     }
 
-    // Create a frame with artwork
     createArtworkFrame(texture, position, rotation, size = { width: 2, height: 1.5 }, imagePath) {
         const frameWidth = size.width + 0.1;
         const frameHeight = size.height + 0.1;
         const frameDepth = 0.05;
         
-        // Regular frame material
         const frameMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x8B4513,
             roughness: 0.5,
             metalness: 0.2
         });
         
-        // Glow material for hover effect
         const glowMaterial = new THREE.MeshStandardMaterial({
             color: 0xC3A066,
             roughness: 0.3,
@@ -103,17 +138,19 @@ export class ArtworkManager {
             emissiveIntensity: 0.5
         });
         
-        // Create frame group
         const frame = new THREE.Group();
+        
+        const metadata = this.getImageMetadata(imagePath);
+        
         frame.userData = {
             isArtwork: true,
             imagePath: imagePath,
             originalMaterial: frameMaterial,
             glowMaterial: glowMaterial,
-            frameParts: [] // To store frame parts for hover effect
+            frameParts: [],
+            metadata: metadata
         };
 
-        // Frame borders
         const topBorder = new THREE.Mesh(
             new THREE.BoxGeometry(frameWidth, 0.05, frameDepth),
             frameMaterial
@@ -146,7 +183,6 @@ export class ArtworkManager {
         frame.add(rightBorder);
         frame.userData.frameParts.push(rightBorder);
 
-        // Background plane behind artwork for highlight effect
         const highlightMaterial = new THREE.MeshBasicMaterial({
             color: 0xFFFFFF,
             opacity: 0,
@@ -161,7 +197,6 @@ export class ArtworkManager {
         frame.add(highlight);
         frame.userData.highlight = highlight;
 
-        // Artwork plane
         const artworkMaterial = new THREE.MeshBasicMaterial({ 
             map: texture,
             side: THREE.FrontSide
@@ -177,15 +212,12 @@ export class ArtworkManager {
         frame.position.copy(position);
         frame.rotation.copy(rotation);
         
-        // Add hover and unhover methods
         frame.userData.setHover = function(isHovered) {
-            // Apply glow effect to frame parts
             const material = isHovered ? this.glowMaterial : this.originalMaterial;
             for (const part of this.frameParts) {
                 part.material = material;
             }
             
-            // Apply highlight effect
             if (this.highlight) {
                 this.highlight.material.opacity = isHovered ? 0.2 : 0;
             }
@@ -196,6 +228,7 @@ export class ArtworkManager {
 
     loadArtwork(imagePath, position, rotation, size) {
         return new Promise((resolve, reject) => {
+            console.log(`Loading image: ${imagePath}`);
             this.textureLoader.load(
                 imagePath,
                 (texture) => {
@@ -219,13 +252,11 @@ export class ArtworkManager {
         });
     }
 
-    // Layout images on the central wall
     arrangeCentralWallArtworks(centralWall, artworkPaths, isBackSide = false) {
         const promises = [];
         const wallWidth = centralWall.geometry.parameters.width;
         const wallHeight = centralWall.geometry.parameters.height;
         
-        // Create a grid of images
         const rows = 2;
         const cols = 3;
         const frameWidth = wallWidth / (cols + 1) * 0.6;
@@ -238,8 +269,6 @@ export class ArtworkManager {
                 
                 const x = (col - (cols - 1) / 2) * (frameWidth * 1.2);
                 
-                // Fixed: Ensure images are placed at proper height on the wall
-                // Calculate position between 25% and 75% of wall height based on row
                 const heightPercent = 0.7 - (row * 0.4);
                 const y = wallHeight * heightPercent;
                 
@@ -274,14 +303,12 @@ export class ArtworkManager {
         return promises;
     }
 
-    // Layout images on outer walls
     arrangeOuterWallArtworks(wall, artworkPaths, count = 5) {
         const promises = [];
         const imagesToUse = artworkPaths.slice(0, count);
         const wallWidth = wall.geometry.parameters.width;
         const wallHeight = wall.geometry.parameters.height;
         
-        // Find wall orientation
         let wallDirection;
         if (Math.abs(wall.rotation.y - Math.PI/2) < 0.1) {
             wallDirection = 'west';
@@ -293,7 +320,6 @@ export class ArtworkManager {
             wallDirection = 'south';
         }
         
-        // Calculate positions based on wall direction
         const spacing = wallWidth / (count + 1);
         const frameWidth = Math.min(spacing * 0.8, 2);
         const frameHeight = frameWidth * 0.75;
@@ -305,14 +331,13 @@ export class ArtworkManager {
             
             let position, rotation;
             
-            // Fix: Place artwork at consistent height on walls (eye level)
-            const artworkHeight = wallHeight * 0.55; // Position at ~55% of wall height for good viewing
+            const artworkHeight = wallHeight * 0.55;
             
             if (isHorizontalWall) {
                 const x = (i - (count - 1) / 2) * spacing;
                 position = new THREE.Vector3(
                     wall.position.x + x,
-                    artworkHeight, // Fixed height
+                    artworkHeight,
                     wall.position.z + (wallDirection === 'north' ? 0.05 : -0.05)
                 );
                 rotation = new THREE.Euler(0, wallDirection === 'south' ? Math.PI : 0, 0);
@@ -320,7 +345,7 @@ export class ArtworkManager {
                 const z = (i - (count - 1) / 2) * spacing;
                 position = new THREE.Vector3(
                     wall.position.x + (wallDirection === 'east' ? -0.05 : 0.05),
-                    artworkHeight, // Fixed height
+                    artworkHeight,
                     wall.position.z + z
                 );
                 rotation = new THREE.Euler(0, wallDirection === 'east' ? -Math.PI/2 : Math.PI/2, 0);
@@ -339,13 +364,11 @@ export class ArtworkManager {
         return promises;
     }
 
-    // Load all artworks into the gallery
     async populateGallery(wallsMap) {
         try {
             const { featured, regular } = await this.getAllStyleTransferImages();
             const promises = [];
             
-            // Central wall - different featured images on each side
             if (wallsMap.central.front) {
                 const frontSideImages = featured.slice(0, 6);
                 const backSideImages = featured.slice(0, 6).reverse();
@@ -354,11 +377,8 @@ export class ArtworkManager {
                 promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.back, backSideImages, true));
             }
             
-            // Outer walls - random selection of regular images
             let startIndex = 0;
             const imagesPerWall = 5;
-            
-            // North wall
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.north, 
                 regular.slice(startIndex, startIndex + imagesPerWall), 
@@ -366,7 +386,6 @@ export class ArtworkManager {
             ));
             startIndex += imagesPerWall;
             
-            // South wall
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.south, 
                 regular.slice(startIndex, startIndex + imagesPerWall), 
@@ -374,7 +393,6 @@ export class ArtworkManager {
             ));
             startIndex += imagesPerWall;
             
-            // East wall
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.east, 
                 regular.slice(startIndex, startIndex + imagesPerWall), 
@@ -382,7 +400,6 @@ export class ArtworkManager {
             ));
             startIndex += imagesPerWall;
             
-            // West wall
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.west, 
                 regular.slice(startIndex, startIndex + imagesPerWall), 

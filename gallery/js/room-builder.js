@@ -68,22 +68,18 @@ export class RoomBuilder {
             metalness: 0.0
         });
 
-        // Outer walls
-        // North wall
         const northWallGeometry = new THREE.PlaneGeometry(this.config.width, this.config.height);
         const northWall = new THREE.Mesh(northWallGeometry, wallMaterial);
         northWall.position.set(0, this.config.height/2, -this.config.depth/2);
         this.scene.add(northWall);
         this.wallsMap.north = northWall;
         
-        // South wall
         const southWall = new THREE.Mesh(northWallGeometry, wallMaterial);
         southWall.position.set(0, this.config.height/2, this.config.depth/2);
         southWall.rotation.y = Math.PI;
         this.scene.add(southWall);
         this.wallsMap.south = southWall;
         
-        // East wall
         const eastWallGeometry = new THREE.PlaneGeometry(this.config.depth, this.config.height);
         const eastWall = new THREE.Mesh(eastWallGeometry, wallMaterial);
         eastWall.position.set(this.config.width/2, this.config.height/2, 0);
@@ -91,22 +87,18 @@ export class RoomBuilder {
         this.scene.add(eastWall);
         this.wallsMap.east = eastWall;
         
-        // West wall
         const westWall = new THREE.Mesh(eastWallGeometry, wallMaterial);
         westWall.position.set(-this.config.width/2, this.config.height/2, 0);
         westWall.rotation.y = Math.PI/2;
         this.scene.add(westWall);
         this.wallsMap.west = westWall;
         
-        // Central wall with thickness
         const centralWallWidth = this.config.width * 0.6;
         const centralWallHeight = this.config.height * 0.9;
         const centralWallThickness = 0.3;
         
-        // Create a central wall group
         const centralWallGroup = new THREE.Group();
         
-        // Create a box for the central wall with thickness
         const centralWallGeometry = new THREE.BoxGeometry(
             centralWallWidth, 
             centralWallHeight, 
@@ -118,19 +110,17 @@ export class RoomBuilder {
         centralWallGroup.add(centralWall);
         this.scene.add(centralWallGroup);
         
-        // Create planes for attaching artwork that sit just above the wall surface
         const frontPlaneGeometry = new THREE.PlaneGeometry(centralWallWidth, centralWallHeight);
         const centralWallFront = new THREE.Mesh(frontPlaneGeometry, wallMaterial.clone());
         centralWallFront.position.set(0, 0, centralWallThickness/2 + 0.01);
-        centralWallFront.visible = false; // Make invisible but keep for artwork placement
+        centralWallFront.visible = false;
         centralWallGroup.add(centralWallFront);
         this.wallsMap.central.front = centralWallFront;
         
-        // Back side for artwork
         const centralWallBack = new THREE.Mesh(frontPlaneGeometry, wallMaterial.clone());
         centralWallBack.position.set(0, 0, -centralWallThickness/2 - 0.01);
         centralWallBack.rotation.y = Math.PI;
-        centralWallBack.visible = false; // Make invisible but keep for artwork placement
+        centralWallBack.visible = false;
         centralWallGroup.add(centralWallBack);
         this.wallsMap.central.back = centralWallBack;
     }
