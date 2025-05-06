@@ -32,10 +32,7 @@ pip install -r requirements.txt
 To run the gallery:
 
 ```bash
-# Navigate to project directory
-cd path/to/CPSC479/FP
-
-# Start
+# Start the gallery
 ./start-gallery.sh
 
 # Open in browser (automatically opens)
@@ -56,7 +53,7 @@ To run the style transfer model:
 
 ```bash
 # Navigate to the model directory
-cd path/to/CPSC479/FP/model
+cd model
 
 # Run style transfer with default parameters
 python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg

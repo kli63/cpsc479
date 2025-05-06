@@ -21,8 +21,7 @@ pip install -r ../requirements.txt
 To view style transfer results in the 3D gallery:
 
 ```bash
-# Start from the project root directory
-cd path/to/CPSC479/FP
+# From the project root
 ./start-gallery.sh
 
 # Open in browser
@@ -47,16 +46,13 @@ http://localhost:8000/
 ## Running Style Transfer
 
 ```bash
-# Navigate to the model directory
-cd path/to/CPSC479/FP/model
-
-# Run style transfer with basic parameters
+# From the model directory
 python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg
 ```
 
 ## Bulk Style Transfer Generator
 
-To generate multiple style transfers in parallel:
+To generate multiple style transfers:
 
 ```bash
 # Run with default settings (5 random combinations)

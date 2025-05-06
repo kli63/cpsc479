@@ -21,9 +21,6 @@ This is a Three.js-based virtual gallery application designed to showcase the st
 To run the gallery:
 
 ```bash
-# Navigate to the project directory
-cd path/to/CPSC479/FP
-
 # Make the scripts executable (if needed)
 chmod +x start-gallery.sh gallery/update-gallery-manifest.sh
 
