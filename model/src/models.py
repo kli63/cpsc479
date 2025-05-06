@@ -471,7 +471,3 @@ class WaveletOptimizedStyleTransfer(nn.Module):
             'Total Loss': losses_log['total']
         }
         return stylized_img_final, losses_dict_viz
-
-    # Note: The 'forward', 'encode', 'decode', 'apply_hybrid_transfer' methods
-    # are now unused by the style_transfer.py script but are kept here
-    # as they define the feed-forward architecture if needed later (e.g., for training).
