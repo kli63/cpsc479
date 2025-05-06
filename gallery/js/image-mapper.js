@@ -1,9 +1,10 @@
 export class ImageMapper {
     constructor() {
         this.mappings = new Map();
-        this.styleResultsPath = 'model/results';
-        this.inputImagesPath = 'model/assets/input';
-        this.referencePath = 'model/assets/reference';
+        const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+        this.styleResultsPath = `${basePath}model/results`;
+        this.inputImagesPath = `${basePath}model/assets/input`;
+        this.referencePath = `${basePath}model/assets/reference`;
         
         this.initializeMappings();
     }

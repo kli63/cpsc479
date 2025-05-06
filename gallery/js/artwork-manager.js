@@ -6,13 +6,28 @@ export class ArtworkManager {
         this.scene = scene;
         this.loadingManager = loadingManager || new THREE.LoadingManager();
         this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-        this.styleTransferPath = 'model/results';
-        this.contentImagesPath = 'model/assets/input';
-        this.styleImagesPath = 'model/assets/reference';
-        this.bestImagesPath = 'gallery/assets/best';
+        this.basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+        this.styleTransferPath = `${this.basePath}model/results`;
+        this.contentImagesPath = `${this.basePath}model/assets/input`;
+        this.styleImagesPath = `${this.basePath}model/assets/reference`;
+        this.bestImagesPath = `${this.basePath}gallery/assets/best`;
         this.artworks = [];
         this.allowDuplicates = false;
         this.manifestLoader = new ManifestLoader();
+    }
+    
+    adjustPath(path) {
+        if (!path) return path;
+        
+        if (this.basePath && !path.startsWith(this.basePath) && !path.startsWith('/')) {
+            return `${this.basePath}${path}`;
+        }
+        
+        if (!this.basePath && path.startsWith('/')) {
+            return path.substring(1);
+        }
+        
+        return path;
     }
 
     async getAllStyleTransferImages() {
@@ -230,9 +245,10 @@ export class ArtworkManager {
 
     loadArtwork(imagePath, position, rotation, size) {
         return new Promise((resolve, reject) => {
-            console.log(`Loading image: ${imagePath}`);
+            const adjustedPath = this.adjustPath(imagePath);
+            console.log(`Loading image: ${adjustedPath}`);
             this.textureLoader.load(
-                imagePath,
+                adjustedPath,
                 (texture) => {
                     const frame = this.createArtworkFrame(
                         texture,
@@ -247,7 +263,7 @@ export class ArtworkManager {
                 },
                 undefined,
                 (error) => {
-                    console.error(`Error loading texture: ${imagePath}`, error);
+                    console.error(`Error loading texture: ${adjustedPath}`, error);
                     reject(error);
                 }
             );

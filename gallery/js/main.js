@@ -359,12 +359,24 @@ function showImageDetail(artwork) {
     originalImage.src = '';
     styleImage.src = '';
     
+    const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+    const adjustPath = (path) => {
+        if (!path) return '';
+        if (basePath && !path.startsWith(basePath) && !path.startsWith('/')) {
+            return `${basePath}${path}`;
+        }
+        if (!basePath && path.startsWith('/')) {
+            return path.substring(1);
+        }
+        return path;
+    };
+    
     setTimeout(() => {
-        styledImage.src = styledImagePath;
-        originalImage.src = originalImagePath;
+        styledImage.src = adjustPath(styledImagePath);
+        originalImage.src = adjustPath(originalImagePath);
         
         if (styleImagePath && styleImagePath !== '') {
-            styleImage.src = styleImagePath;
+            styleImage.src = adjustPath(styleImagePath);
             styleImage.parentElement.style.display = 'flex';
         } else {
             styleImage.parentElement.style.display = 'none';
