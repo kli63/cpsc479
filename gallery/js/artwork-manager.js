@@ -395,12 +395,16 @@ export class ArtworkManager {
             let bestImages = [];
             try {
                 bestImages = await this.manifestLoader.getBestImages();
-                bestImages = bestImages.filter(path => path); // Filter out undefined/null values
+                bestImages = bestImages.filter(path => path);
             } catch (error) {
-                console.warn("Error loading best images, falling back to featured images");
+                console.warn("Error loading best images:", error);
+                throw new Error("Failed to load images from manifest");
             }
             
             const { featured, regular } = await this.getAllStyleTransferImages();
+            if (featured.length === 0 && regular.length === 0) {
+                throw new Error("No images found in the manifest");
+            }
             
             let processedBestImages = bestImages.filter(path => path).map(path => {
                 if (path.startsWith('/gallery/')) {
