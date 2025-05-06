@@ -93,7 +93,7 @@ export class RoomBuilder {
         this.scene.add(westWall);
         this.wallsMap.west = westWall;
         
-        const centralWallWidth = this.config.width * 0.9;
+        const centralWallWidth = this.config.width * 0.6;
         const centralWallHeight = this.config.height * 0.9;
         const centralWallThickness = 0.3;
         

@@ -56,60 +56,9 @@ export class ArtworkManager {
                 }
             });
         }
-        
-        // Add any images that might be in model/results but not in the manifest
-        try {
-            // We'll manually check the model/results directory structure to find all styled images
-            // This is a backup to ensure we get ALL possible images
-            const customResultsGlobs = [
-                `${this.styleTransferPath}/style_transfer_*/????_styled_with_????.jpg`
-            ];
-            
-            // Simulate file globbing in JavaScript (since we can't use direct file system access)
-            // Instead, we'll construct paths manually based on the directory structure we know exists
-            const dateStamps = [
-                "20250505_104324", "20250505_104421", "20250505_125602", "20250505_142414", 
-                "20250505_142531", "20250505_142712", "20250505_142808", "20250505_143106", 
-                "20250505_144437", "20250505_145202", "20250505_145246", "20250505_145329",
-                "20250505_145414", "20250505_145501", "20250505_145549", "20250505_145636",
-                "20250505_145726", "20250505_145813", "20250505_150416", "20250505_151011",
-                "20250505_151055", "20250505_151140", "20250505_151226", "20250505_151312",
-                "20250505_151359", "20250505_151445", "20250505_151532", "20250505_151619",
-                "20250505_151708"
-            ];
-            
-            // Content images (from 1 to 87)
-            const contentImages = [];
-            for (let i = 1; i <= 87; i++) {
-                contentImages.push(i.toString().padStart(4, '0'));
-            }
-            
-            // Style images (from 1 to 32)
-            const styleImages = [];
-            for (let i = 1; i <= 32; i++) {
-                styleImages.push(i.toString().padStart(4, '0'));
-            }
-            
-            // Generate all possible combinations of datestamp, content image, and style image
-            for (const dateStamp of dateStamps) {
-                for (const contentImage of contentImages) {
-                    for (const styleImage of styleImages) {
-                        const imagePath = `${this.styleTransferPath}/style_transfer_${dateStamp}/${contentImage}_styled_with_${styleImage}.jpg`;
-                        const key = `${contentImage}_${styleImage}`;
-                        
-                        // Add to the map if it's not already there
-                        if (!uniqueImagesMap.has(key)) {
-                            uniqueImagesMap.set(key, imagePath);
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn("Error adding additional images, continuing with what we have:", error);
-        }
+        console.log(`Loaded ${uniqueImages.length} styled images from manifest and directory structure`);
         
         const uniqueImages = Array.from(uniqueImagesMap.values());
-        console.log(`Loaded ${uniqueImages.length} styled images from manifest and directory structure`);
         
         const requiredFeaturedCount = 8; 
         const requiredRegularCount = 20;
@@ -123,10 +72,9 @@ export class ArtworkManager {
         const remainingForRegular = Math.max(0, shuffled.length - requiredFeaturedCount);
         regularImages = shuffled.slice(requiredFeaturedCount, requiredFeaturedCount + remainingForRegular);
         
-        // If we don't have enough images, allow duplicates
         if (featuredImages.length < requiredFeaturedCount || regularImages.length < requiredRegularCount) {
-            console.warn("Not enough unique images found, allowing duplicates to fill the walls");
-            this.allowDuplicates = true;
+            console.warn("Not enough unique images found, keeping unique images only");
+            this.allowDuplicates = false;
             
             if (this.allowDuplicates) {
                 const duplicatedSet = [];
@@ -314,17 +262,21 @@ export class ArtworkManager {
         
         const rows = 2;
         const cols = 4;
-        const frameWidth = wallWidth / (cols + 2) * 0.9;
+        
+        const frameWidth = wallWidth * 0.17;
         const frameHeight = frameWidth * 0.75;
+        const spacing = frameWidth * 0.45;
         
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
                 const index = row * cols + col;
                 if (index >= artworkPaths.length) break;
                 
-                const x = (col - (cols - 1) / 2) * (frameWidth * 1.5);
+                const totalUsedWidth = (cols * frameWidth) + ((cols - 1) * spacing);
+                const startX = -totalUsedWidth / 2;
+                const x = startX + (col * (frameWidth + spacing)) + (frameWidth / 2);
                 
-                const heightPercent = row === 0 ? 0.7 : 0.25;
+                const heightPercent = row === 0 ? 0.735 : 0.265;
                 const y = wallHeight * heightPercent;
                 
                 const zOffset = isBackSide ? -0.05 : 0.05;
@@ -442,8 +394,6 @@ export class ArtworkManager {
             const promises = [];
             
             if (wallsMap.central.front) {
-                let frontWallImages = [];
-                let backWallImages = [];
                 const extractKey = (path) => {
                     const filename = path.split('/').pop();
                     const match = filename.match(/(\d+)_styled_with_(\d+)/);
@@ -453,160 +403,94 @@ export class ArtworkManager {
                     return null;
                 };
                 
-                // Filter out comparison images
+                const frontWallMax = 8;
+                const backWallMax = 8;
+                
                 const filteredBestImages = processedBestImages.filter(path => !path.includes('_comparison'));
                 const filteredFeatured = featured.filter(path => !path.includes('_comparison'));
                 const filteredRegular = regular.filter(path => !path.includes('_comparison'));
                 
-                // Combine all available images
-                const allAvailableImages = [...filteredBestImages, ...filteredFeatured, ...filteredRegular];
-                console.log(`Total available unique images: ${allAvailableImages.length}`);
+                const allImages = [...filteredBestImages, ...filteredFeatured, ...filteredRegular];
+                console.log(`Total available unique images: ${allImages.length}`);
                 
-                const frontWallMax = 8;
-                const backWallMax = 8;
-                const frontWallKeys = new Set();
-                const backWallKeys = new Set();
+                const frontWallImages = [];
+                const backWallImages = [];
+                
                 const usedKeys = new Set();
                 
-                // Shuffle all images
-                const shuffledImages = this.shuffleArray([...allAvailableImages]);
-                
-                // First, fill the front wall with best images
-                for (const path of bestImagesShuffled) {
-                    if (frontWallImages.length >= frontWallMax) break;
+                if (filteredBestImages.length > 0) {
+                    const bestImagesShuffled = this.shuffleArray([...filteredBestImages]);
                     
-                    const key = extractKey(path);
-                    if (key && !usedKeys.has(key)) {
-                        frontWallImages.push(path);
-                        frontWallKeys.add(key);
-                        usedKeys.add(key);
-                    }
-                }
-                
-                // Then fill the back wall with best images that weren't used for the front
-                for (const path of bestImagesShuffled) {
-                    if (backWallImages.length >= backWallMax) break;
-                    
-                    const key = extractKey(path);
-                    if (key && !usedKeys.has(key)) {
-                        backWallImages.push(path);
-                        backWallKeys.add(key);
-                        usedKeys.add(key);
-                    }
-                }
-                
-                // If front wall isn't full yet, add regular images
-                for (const path of allImages) {
-                    if (frontWallImages.length >= frontWallMax) break;
-                    
-                    const key = extractKey(path);
-                    if (key && !usedKeys.has(key)) {
-                        frontWallImages.push(path);
-                        frontWallKeys.add(key);
-                        usedKeys.add(key);
-                    }
-                }
-                
-                // If back wall isn't full yet, fill with remaining images
-                for (const path of allImages) {
-                    if (backWallImages.length >= backWallMax) break;
-                    
-                    const key = extractKey(path);
-                    if (key && !usedKeys.has(key)) {
-                        backWallImages.push(path);
-                        backWallKeys.add(key);
-                        usedKeys.add(key);
-                    }
-                }
-                
-                // If we still don't have enough images, use all available images
-                // including any from the model/results directory
-                if (frontWallImages.length < frontWallMax || backWallImages.length < backWallMax) {
-                    console.log("Need more images to fill walls, using all available styled images");
-                    
-                    // Get absolutely all styled images from the customResults in the manifest
-                    // (this should give us access to all results without duplicates)
-                    let allPossibleImages = [];
-                    try {
-                        const manifest = await this.manifestLoader.loadManifest();
-                        allPossibleImages = manifest.customResults || [];
-                        allPossibleImages = allPossibleImages
-                            .filter(path => !path.includes('_comparison'))
-                            .map(path => {
-                                if (path.startsWith('/')) {
-                                    return `..${path}`;
-                                }
-                                return path;
-                            })
-                            .sort(() => Math.random() - 0.5);
-                    } catch (error) {
-                        console.error("Error getting all possible images:", error);
-                        // Fallback to featured + regular
-                        allPossibleImages = [...featured, ...regular]
-                            .filter(path => !path.includes('_comparison'))
-                            .sort(() => Math.random() - 0.5);
-                    }
-                    
-                    // Fill front wall first
-                    for (const path of allPossibleImages) {
+                    for (const path of bestImagesShuffled) {
                         if (frontWallImages.length >= frontWallMax) break;
                         
                         const key = extractKey(path);
                         if (key && !usedKeys.has(key)) {
                             frontWallImages.push(path);
-                            frontWallKeys.add(key);
                             usedKeys.add(key);
                         }
                     }
                     
-                    // Then fill back wall
-                    for (const path of allPossibleImages) {
+                    for (const path of bestImagesShuffled) {
                         if (backWallImages.length >= backWallMax) break;
                         
                         const key = extractKey(path);
                         if (key && !usedKeys.has(key)) {
                             backWallImages.push(path);
-                            backWallKeys.add(key);
                             usedKeys.add(key);
-                        }
-                    }
-                    
-                    // If we STILL don't have enough, allow some duplicates as a last resort
-                    // but only if we absolutely need to
-                    if (frontWallImages.length < frontWallMax) {
-                        console.warn(`Still missing ${frontWallMax - frontWallImages.length} images for front wall, allowing some duplicates`);
-                        
-                        for (const path of allPossibleImages) {
-                            if (frontWallImages.length >= frontWallMax) break;
-                            
-                            // Don't check usedKeys here, so we might reuse some images
-                            // but still ensure they're not duplicated within this wall
-                            const key = extractKey(path);
-                            if (key && !frontWallKeys.has(key)) {
-                                frontWallImages.push(path);
-                                frontWallKeys.add(key);
-                            }
-                        }
-                    }
-                    
-                    if (backWallImages.length < backWallMax) {
-                        console.warn(`Still missing ${backWallMax - backWallImages.length} images for back wall, allowing some duplicates`);
-                        
-                        for (const path of allPossibleImages) {
-                            if (backWallImages.length >= backWallMax) break;
-                            
-                            // Don't check usedKeys here, so we might reuse some images
-                            // but still ensure they're not duplicated within this wall
-                            const key = extractKey(path);
-                            if (key && !backWallKeys.has(key)) {
-                                backWallImages.push(path);
-                                backWallKeys.add(key);
-                            }
                         }
                     }
                 }
                 
-                console.log(`Front wall has ${frontWallImages.length} images, back wall has ${backWallImages.length} images`);
+                const regularImagesShuffled = this.shuffleArray([...filteredFeatured, ...filteredRegular]);
+                
+                if (frontWallImages.length < frontWallMax) {
+                    for (const path of regularImagesShuffled) {
+                        if (frontWallImages.length >= frontWallMax) break;
+                        
+                        const key = extractKey(path);
+                        if (key && !usedKeys.has(key)) {
+                            frontWallImages.push(path);
+                            usedKeys.add(key);
+                        }
+                    }
+                }
+                
+                if (backWallImages.length < backWallMax) {
+                    for (const path of regularImagesShuffled) {
+                        if (backWallImages.length >= backWallMax) break;
+                        
+                        const key = extractKey(path);
+                        if (key && !usedKeys.has(key)) {
+                            backWallImages.push(path);
+                            usedKeys.add(key);
+                        }
+                    }
+                }
+                
+                if (frontWallImages.length < frontWallMax || backWallImages.length < backWallMax) {
+                    const allImagesShuffled = this.shuffleArray([...allImages]);
+                    
+                    if (frontWallImages.length < frontWallMax) {
+                        let index = 0;
+                        while (frontWallImages.length < frontWallMax && index < 1000) {
+                            const path = allImagesShuffled[index % allImagesShuffled.length];
+                            frontWallImages.push(path);
+                            index++;
+                        }
+                    }
+                    
+                    if (backWallImages.length < backWallMax) {
+                        let index = 0;
+                        while (backWallImages.length < backWallMax && index < 1000) {
+                            const path = allImagesShuffled[index % allImagesShuffled.length];
+                            backWallImages.push(path);
+                            index++;
+                        }
+                    }
+                }
+                
+                console.log(`Front wall: ${frontWallImages.length}/${frontWallMax}, Back wall: ${backWallImages.length}/${backWallMax}`);
                 
                 promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.front, frontWallImages, false));
                 promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.back, backWallImages, true));

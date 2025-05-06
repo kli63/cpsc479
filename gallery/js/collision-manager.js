@@ -66,7 +66,7 @@ export class CollisionManager {
             { width: wallThickness, height: height, depth: roomDimensions.depth },
         );
         
-        const centralWallWidth = roomDimensions.width * 0.9;
+        const centralWallWidth = roomDimensions.width * 0.6;
         const centralWallHeight = roomDimensions.height * 0.9;
         const centralWallThickness = 0.3;
         

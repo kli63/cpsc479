@@ -432,18 +432,36 @@ loadingManager.onLoad = function () {
 };
 
 async function initGallery() {
-    const roomBuilder = new RoomBuilder(scene);
-    const wallsMap = roomBuilder.buildRoom(CONFIG.room);
-    
-    const collisionManager = new CollisionManager(scene, camera, CONFIG);
-    collisionManager.addWallColliders(CONFIG.room);
-    
-    window.collisionManager = collisionManager;
-    
-    createImageDetailOverlay();
-    
-    const artworkManager = new ArtworkManager(scene, loadingManager);
-    await artworkManager.populateGallery(wallsMap);
+    try {
+        const roomBuilder = new RoomBuilder(scene);
+        const wallsMap = roomBuilder.buildRoom(CONFIG.room);
+        
+        const collisionManager = new CollisionManager(scene, camera, CONFIG);
+        collisionManager.addWallColliders(CONFIG.room);
+        
+        window.collisionManager = collisionManager;
+        
+        createImageDetailOverlay();
+        
+        const artworkManager = new ArtworkManager(scene, loadingManager);
+        await artworkManager.populateGallery(wallsMap).catch(error => {
+            console.error('Error populating gallery:', error);
+            document.getElementById('loading-screen').innerHTML = 
+                '<div style="color: white; text-align: center; padding: 20px;">' +
+                '<h2>Failed to load gallery</h2>' +
+                '<p>Error: ' + error.message + '</p>' +
+                '<button onclick="window.location.reload()" style="padding: 10px; margin-top: 20px; cursor: pointer;">Retry</button>' +
+                '</div>';
+        });
+    } catch (error) {
+        console.error('Gallery initialization error:', error);
+        document.getElementById('loading-screen').innerHTML = 
+            '<div style="color: white; text-align: center; padding: 20px;">' +
+            '<h2>Failed to initialize gallery</h2>' +
+            '<p>Error: ' + error.message + '</p>' +
+            '<button onclick="window.location.reload()" style="padding: 10px; margin-top: 20px; cursor: pointer;">Retry</button>' +
+            '</div>';
+    }
 }
 
 const clock = new THREE.Clock();
