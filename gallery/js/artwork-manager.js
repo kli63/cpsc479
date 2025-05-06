@@ -57,8 +57,59 @@ export class ArtworkManager {
             });
         }
         
+        // Add any images that might be in model/results but not in the manifest
+        try {
+            // We'll manually check the model/results directory structure to find all styled images
+            // This is a backup to ensure we get ALL possible images
+            const customResultsGlobs = [
+                `${this.styleTransferPath}/style_transfer_*/????_styled_with_????.jpg`
+            ];
+            
+            // Simulate file globbing in JavaScript (since we can't use direct file system access)
+            // Instead, we'll construct paths manually based on the directory structure we know exists
+            const dateStamps = [
+                "20250505_104324", "20250505_104421", "20250505_125602", "20250505_142414", 
+                "20250505_142531", "20250505_142712", "20250505_142808", "20250505_143106", 
+                "20250505_144437", "20250505_145202", "20250505_145246", "20250505_145329",
+                "20250505_145414", "20250505_145501", "20250505_145549", "20250505_145636",
+                "20250505_145726", "20250505_145813", "20250505_150416", "20250505_151011",
+                "20250505_151055", "20250505_151140", "20250505_151226", "20250505_151312",
+                "20250505_151359", "20250505_151445", "20250505_151532", "20250505_151619",
+                "20250505_151708"
+            ];
+            
+            // Content images (from 1 to 87)
+            const contentImages = [];
+            for (let i = 1; i <= 87; i++) {
+                contentImages.push(i.toString().padStart(4, '0'));
+            }
+            
+            // Style images (from 1 to 32)
+            const styleImages = [];
+            for (let i = 1; i <= 32; i++) {
+                styleImages.push(i.toString().padStart(4, '0'));
+            }
+            
+            // Generate all possible combinations of datestamp, content image, and style image
+            for (const dateStamp of dateStamps) {
+                for (const contentImage of contentImages) {
+                    for (const styleImage of styleImages) {
+                        const imagePath = `${this.styleTransferPath}/style_transfer_${dateStamp}/${contentImage}_styled_with_${styleImage}.jpg`;
+                        const key = `${contentImage}_${styleImage}`;
+                        
+                        // Add to the map if it's not already there
+                        if (!uniqueImagesMap.has(key)) {
+                            uniqueImagesMap.set(key, imagePath);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn("Error adding additional images, continuing with what we have:", error);
+        }
+        
         const uniqueImages = Array.from(uniqueImagesMap.values());
-        console.log(`Loaded ${uniqueImages.length} styled images from manifest`);
+        console.log(`Loaded ${uniqueImages.length} styled images from manifest and directory structure`);
         
         const requiredFeaturedCount = 8; 
         const requiredRegularCount = 20;
@@ -66,22 +117,28 @@ export class ArtworkManager {
         
         let featuredImages, regularImages;
         
-        if (this.allowDuplicates && uniqueImages.length < totalRequired) {
-            const duplicatedSet = [];
+        const shuffled = this.shuffleArray([...uniqueImages]);
+        featuredImages = shuffled.slice(0, Math.min(requiredFeaturedCount, shuffled.length));
+        
+        const remainingForRegular = Math.max(0, shuffled.length - requiredFeaturedCount);
+        regularImages = shuffled.slice(requiredFeaturedCount, requiredFeaturedCount + remainingForRegular);
+        
+        // If we don't have enough images, allow duplicates
+        if (featuredImages.length < requiredFeaturedCount || regularImages.length < requiredRegularCount) {
+            console.warn("Not enough unique images found, allowing duplicates to fill the walls");
+            this.allowDuplicates = true;
             
-            while (duplicatedSet.length < totalRequired) {
-                duplicatedSet.push(...uniqueImages);
+            if (this.allowDuplicates) {
+                const duplicatedSet = [];
+                
+                while (duplicatedSet.length < totalRequired) {
+                    duplicatedSet.push(...uniqueImages);
+                }
+                
+                const shuffled = this.shuffleArray(duplicatedSet);
+                featuredImages = shuffled.slice(0, requiredFeaturedCount);
+                regularImages = shuffled.slice(requiredFeaturedCount, totalRequired);
             }
-            
-            const shuffled = this.shuffleArray(duplicatedSet);
-            featuredImages = shuffled.slice(0, requiredFeaturedCount);
-            regularImages = shuffled.slice(requiredFeaturedCount, totalRequired);
-        } else {
-            const shuffled = this.shuffleArray([...uniqueImages]);
-            featuredImages = shuffled.slice(0, Math.min(requiredFeaturedCount, shuffled.length));
-            
-            const remainingForRegular = Math.max(0, shuffled.length - requiredFeaturedCount);
-            regularImages = shuffled.slice(requiredFeaturedCount, requiredFeaturedCount + remainingForRegular);
         }
         
         return {
@@ -281,7 +338,6 @@ export class ArtworkManager {
                     centralWall.position.z + zOffset
                 );
                 
-                // Rotation needs to account for which side of the wall
                 const rotation = isBackSide ? 
                     new THREE.Euler(0, Math.PI, 0) : 
                     new THREE.Euler(0, 0, 0);
@@ -388,8 +444,6 @@ export class ArtworkManager {
             if (wallsMap.central.front) {
                 let frontWallImages = [];
                 let backWallImages = [];
-                const usedKeys = new Set();
-                
                 const extractKey = (path) => {
                     const filename = path.split('/').pop();
                     const match = filename.match(/(\d+)_styled_with_(\d+)/);
@@ -399,137 +453,160 @@ export class ArtworkManager {
                     return null;
                 };
                 
+                // Filter out comparison images
                 const filteredBestImages = processedBestImages.filter(path => !path.includes('_comparison'));
+                const filteredFeatured = featured.filter(path => !path.includes('_comparison'));
+                const filteredRegular = regular.filter(path => !path.includes('_comparison'));
+                
+                // Combine all available images
+                const allAvailableImages = [...filteredBestImages, ...filteredFeatured, ...filteredRegular];
+                console.log(`Total available unique images: ${allAvailableImages.length}`);
                 
                 const frontWallMax = 8;
                 const backWallMax = 8;
-                
-                let selectedForFront = 0;
-                let selectedForBack = 0;
-                
                 const frontWallKeys = new Set();
                 const backWallKeys = new Set();
+                const usedKeys = new Set();
                 
-                const bestImages = [...filteredBestImages].sort(() => Math.random() - 0.5);
+                // Shuffle all images
+                const shuffledImages = this.shuffleArray([...allAvailableImages]);
                 
-                for (let i = 0; i < bestImages.length; i++) {
-                    const path = bestImages[i];
+                // First, fill the front wall with best images
+                for (const path of bestImagesShuffled) {
+                    if (frontWallImages.length >= frontWallMax) break;
+                    
                     const key = extractKey(path);
-                    
-                    if (key && !usedKeys.has(key) && !frontWallKeys.has(key)) {
+                    if (key && !usedKeys.has(key)) {
+                        frontWallImages.push(path);
+                        frontWallKeys.add(key);
                         usedKeys.add(key);
-                        
-                        if (selectedForFront < frontWallMax) {
-                            frontWallImages.push(path);
-                            frontWallKeys.add(key);
-                            selectedForFront++;
-                        }
                     }
                 }
                 
-                const remainingBestImages = [...filteredBestImages].sort(() => Math.random() - 0.5);
-                
-                for (let i = 0; i < remainingBestImages.length; i++) {
-                    const path = remainingBestImages[i];
+                // Then fill the back wall with best images that weren't used for the front
+                for (const path of bestImagesShuffled) {
+                    if (backWallImages.length >= backWallMax) break;
+                    
                     const key = extractKey(path);
-                    
-                    if (key && !usedKeys.has(key) && !backWallKeys.has(key)) {
+                    if (key && !usedKeys.has(key)) {
+                        backWallImages.push(path);
+                        backWallKeys.add(key);
                         usedKeys.add(key);
-                        
-                        if (selectedForBack < backWallMax) {
-                            backWallImages.push(path);
-                            backWallKeys.add(key);
-                            selectedForBack++;
-                        }
                     }
                 }
                 
-                const allImages = [...featured].sort(() => Math.random() - 0.5);
-                
-                while (frontWallImages.length < frontWallMax) {
-                    let added = false;
-                    for (let path of allImages) {
-                        if (frontWallImages.length >= frontWallMax) break;
-                        if (path.includes('_comparison')) continue;
-                        
-                        const key = extractKey(path);
-                        if (key && !frontWallKeys.has(key)) {
-                            usedKeys.add(key);
-                            frontWallKeys.add(key);
-                            frontWallImages.push(path);
-                            added = true;
-                        }
-                    }
+                // If front wall isn't full yet, add regular images
+                for (const path of allImages) {
+                    if (frontWallImages.length >= frontWallMax) break;
                     
-                    if (!added) {
-                        for (let i = 0; i < allImages.length; i++) {
-                            const randomIndex = Math.floor(Math.random() * allImages.length);
-                            const randomImage = allImages[randomIndex];
-                            if (!randomImage || randomImage.includes('_comparison')) continue;
-                            
-                            const key = extractKey(randomImage);
-                            if (key && !frontWallKeys.has(key)) {
-                                frontWallImages.push(randomImage);
-                                frontWallKeys.add(key);
-                                added = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!added && frontWallImages.length < frontWallMax) {
-                            const fallbackImage = allImages[0];
-                            if (fallbackImage && !fallbackImage.includes('_comparison')) {
-                                frontWallImages.push(fallbackImage);
-                            }
-                        }
+                    const key = extractKey(path);
+                    if (key && !usedKeys.has(key)) {
+                        frontWallImages.push(path);
+                        frontWallKeys.add(key);
+                        usedKeys.add(key);
                     }
                 }
                 
-                while (backWallImages.length < backWallMax) {
-                    let added = false;
-                    for (let path of allImages) {
-                        if (backWallImages.length >= backWallMax) break;
-                        if (path.includes('_comparison')) continue;
-                        
-                        const key = extractKey(path);
-                        if (key && !backWallKeys.has(key)) {
-                            usedKeys.add(key);
-                            backWallKeys.add(key);
-                            backWallImages.push(path);
-                            added = true;
-                        }
-                    }
+                // If back wall isn't full yet, fill with remaining images
+                for (const path of allImages) {
+                    if (backWallImages.length >= backWallMax) break;
                     
-                    if (!added) {
-                        for (let i = 0; i < allImages.length; i++) {
-                            const randomIndex = Math.floor(Math.random() * allImages.length);
-                            const randomImage = allImages[randomIndex];
-                            if (!randomImage || randomImage.includes('_comparison')) continue;
-                            
-                            const key = extractKey(randomImage);
-                            if (key && !backWallKeys.has(key) && !frontWallKeys.has(key)) {
-                                backWallImages.push(randomImage);
-                                backWallKeys.add(key);
-                                added = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!added && backWallImages.length < backWallMax) {
-                            for (let i = 0; i < allImages.length; i++) {
-                                const randomImage = allImages[i];
-                                if (!randomImage || randomImage.includes('_comparison')) continue;
-                                
-                                const key = extractKey(randomImage);
-                                if (key && !backWallKeys.has(key)) {
-                                    backWallImages.push(randomImage);
-                                    backWallKeys.add(key);
-                                    break;
+                    const key = extractKey(path);
+                    if (key && !usedKeys.has(key)) {
+                        backWallImages.push(path);
+                        backWallKeys.add(key);
+                        usedKeys.add(key);
+                    }
+                }
+                
+                // If we still don't have enough images, use all available images
+                // including any from the model/results directory
+                if (frontWallImages.length < frontWallMax || backWallImages.length < backWallMax) {
+                    console.log("Need more images to fill walls, using all available styled images");
+                    
+                    // Get absolutely all styled images from the customResults in the manifest
+                    // (this should give us access to all results without duplicates)
+                    let allPossibleImages = [];
+                    try {
+                        const manifest = await this.manifestLoader.loadManifest();
+                        allPossibleImages = manifest.customResults || [];
+                        allPossibleImages = allPossibleImages
+                            .filter(path => !path.includes('_comparison'))
+                            .map(path => {
+                                if (path.startsWith('/')) {
+                                    return `..${path}`;
                                 }
+                                return path;
+                            })
+                            .sort(() => Math.random() - 0.5);
+                    } catch (error) {
+                        console.error("Error getting all possible images:", error);
+                        // Fallback to featured + regular
+                        allPossibleImages = [...featured, ...regular]
+                            .filter(path => !path.includes('_comparison'))
+                            .sort(() => Math.random() - 0.5);
+                    }
+                    
+                    // Fill front wall first
+                    for (const path of allPossibleImages) {
+                        if (frontWallImages.length >= frontWallMax) break;
+                        
+                        const key = extractKey(path);
+                        if (key && !usedKeys.has(key)) {
+                            frontWallImages.push(path);
+                            frontWallKeys.add(key);
+                            usedKeys.add(key);
+                        }
+                    }
+                    
+                    // Then fill back wall
+                    for (const path of allPossibleImages) {
+                        if (backWallImages.length >= backWallMax) break;
+                        
+                        const key = extractKey(path);
+                        if (key && !usedKeys.has(key)) {
+                            backWallImages.push(path);
+                            backWallKeys.add(key);
+                            usedKeys.add(key);
+                        }
+                    }
+                    
+                    // If we STILL don't have enough, allow some duplicates as a last resort
+                    // but only if we absolutely need to
+                    if (frontWallImages.length < frontWallMax) {
+                        console.warn(`Still missing ${frontWallMax - frontWallImages.length} images for front wall, allowing some duplicates`);
+                        
+                        for (const path of allPossibleImages) {
+                            if (frontWallImages.length >= frontWallMax) break;
+                            
+                            // Don't check usedKeys here, so we might reuse some images
+                            // but still ensure they're not duplicated within this wall
+                            const key = extractKey(path);
+                            if (key && !frontWallKeys.has(key)) {
+                                frontWallImages.push(path);
+                                frontWallKeys.add(key);
+                            }
+                        }
+                    }
+                    
+                    if (backWallImages.length < backWallMax) {
+                        console.warn(`Still missing ${backWallMax - backWallImages.length} images for back wall, allowing some duplicates`);
+                        
+                        for (const path of allPossibleImages) {
+                            if (backWallImages.length >= backWallMax) break;
+                            
+                            // Don't check usedKeys here, so we might reuse some images
+                            // but still ensure they're not duplicated within this wall
+                            const key = extractKey(path);
+                            if (key && !backWallKeys.has(key)) {
+                                backWallImages.push(path);
+                                backWallKeys.add(key);
                             }
                         }
                     }
                 }
+                
+                console.log(`Front wall has ${frontWallImages.length} images, back wall has ${backWallImages.length} images`);
                 
                 promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.front, frontWallImages, false));
                 promises.push(...this.arrangeCentralWallArtworks(wallsMap.central.back, backWallImages, true));
