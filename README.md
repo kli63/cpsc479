@@ -14,6 +14,19 @@ This project combines wavelet-based neural style transfer with a 3D gallery to d
   - First-person navigation
   - Display of original and styled images
 
+## Environment Setup
+
+To set up the environment for this project:
+
+```bash
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
 ## Quick Start
 
 To run the gallery:
@@ -46,10 +59,33 @@ To run the style transfer model:
 cd path/to/CPSC479/FP/model
 
 # Run style transfer with default parameters
-python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg --output results/my_output.jpg
+python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg
 ```
 
-The results will automatically appear in the gallery on the next launch.
+The results will automatically be saved in a timestamped directory under `model/results/` and will appear in the gallery on the next launch.
+
+### Key Style Transfer Parameters
+
+- `--content`: Path to content image (required)
+- `--style`: Path to style image (required)
+- `--size`: Output image size (default: 512)
+- `--steps`: Number of optimization steps (default: 500)
+- `--visualize`: Generate additional visualizations
+
+For additional parameters and options, see the model README in the `/model` directory.
+
+## Finding Results
+
+Style transfer results are saved in the following location:
+
+```
+model/results/style_transfer_YYYYMMDD_HHMMSS/
+```
+
+Each result directory contains:
+- The stylized image
+- A comparison image showing the content, style, and result
+- Visualizations (if enabled with the `--visualize` flag)
 
 ## Project Structure
 

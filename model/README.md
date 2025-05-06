@@ -2,6 +2,20 @@
 
 This repository contains a wavelet-based style transfer model for image enhancement and artistic stylization.
 
+## Environment Setup
+
+```bash
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r ../requirements.txt
+
+# Make sure PyTorch is installed with CUDA if available
+# The model will automatically use GPU if available
+```
+
 ## Viewing Results in the Gallery
 
 To view style transfer results in the 3D gallery:
@@ -20,15 +34,15 @@ http://localhost:8000/
 - `src/` - Core model implementation
   - `models.py` - WaveletOptimizedStyleTransfer implementation
   - `style_transfer.py` - Command-line interface for running style transfer
-  - `feature_extraction.py` - Feature extraction utilities
+  - `utils.py` - Image loading, visualization, and frequency domain utilities
 
 - `assets/` - Image assets
   - `input/` - Content images
   - `reference/` - Style reference images
-  - `_results/` - Saved style transfer results
 
 - `results/` - Generated style transfer outputs
   - Output is organized by date/time of generation
+  - Each run creates a new subdirectory (e.g., `style_transfer_20250505_104421`)
 
 ## Running Style Transfer
 
@@ -37,7 +51,7 @@ http://localhost:8000/
 cd path/to/CPSC479/FP/model
 
 # Run style transfer with basic parameters
-python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0005.jpg
+python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg
 ```
 
 ## Bulk Style Transfer Generator
@@ -45,18 +59,18 @@ python -m src.style_transfer --content assets/input/0001.jpg --style assets/refe
 To generate multiple style transfers in parallel:
 
 ```bash
-# Run with default settings (50 random combinations, 4 workers)
-./generate_combinations.py
+# Run with default settings (5 random combinations)
+python generate_combinations.py
 
 # Run with custom settings
-./generate_combinations.py --max_combinations 20 --workers 8 --steps 500 --size 768 --visualize
+python generate_combinations.py --max_combinations 20 --steps 500 --size 768 --visualize
 ```
 
 The script will:
 - Track progress in a JSON file
 - Resume from where it left off if interrupted
 - Select random combinations of content and style images
-- Run transfers in parallel
+- Run transfers sequentially
 - Update the gallery manifest when complete
 
 ## Command-line Arguments
@@ -83,7 +97,7 @@ The style transfer model supports the following command-line arguments:
 ### Basic Style Transfer
 
 ```bash
-python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0005.jpg
+python -m src.style_transfer --content assets/input/0001.jpg --style assets/reference/0022.jpg
 ```
 
 ### Advanced Style Transfer with Custom Parameters

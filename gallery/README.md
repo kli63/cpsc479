@@ -13,6 +13,8 @@ This is a Three.js-based virtual gallery application designed to showcase the st
   - `image-mapper.js` - Maps style transfer images to their sources
   - `collision-manager.js` - Handles collision detection for navigation
 - `/css` - Stylesheets
+- `/data` - Contains the gallery manifest file tracking available images
+- `/assets/best` - Contains the best style transfer results for priority display
 
 ## Running the Gallery
 
@@ -36,11 +38,10 @@ This will:
 
 ### GitHub Pages Hosting
 
-The gallery works with GitHub Pages:
+The gallery is deployed on GitHub Pages for easy sharing and viewing:
 
-1. Run `./update-gallery-manifest.sh` to generate the manifest
-2. Add all files to your repository
-3. Enable GitHub Pages in your repository settings
+1. Visit: [https://kli63.github.io/cpsc479/](https://kli63.github.io/cpsc479/)
+2. The manifest file is included in the repository for proper GitHub Pages deployment
 
 ## Features
 
@@ -48,6 +49,7 @@ The gallery works with GitHub Pages:
 - Gallery environment with wall-mounted frames
 - Dynamic loading of style-transferred images
 - Customizable gallery layout
+- Comparison views for original content, style reference, and result
 
 ## Integration with Style Transfer Project
 
@@ -67,11 +69,14 @@ The gallery shows:
 - Content images from `model/assets/input/`
 - Style images from `model/assets/reference/`
 - Style transfer results from `model/results/`
+- Best results from `gallery/assets/best/`
 
-## Future Enhancements
+The most interesting and visually appealing results are featured prominently in the central gallery wall.
 
-- Interactive elements for each artwork (zoom, information panel)
-- Different gallery layouts/rooms
-- Ambient audio
-- Information panels about the style transfer technique
-- Before/after comparison views
+## Updating the Gallery Manifest
+
+After generating new style transfer results, run the update script to refresh the gallery manifest:
+
+```bash
+./gallery/update-gallery-manifest.sh
+```
