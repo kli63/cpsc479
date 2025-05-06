@@ -359,7 +359,7 @@ function showImageDetail(artwork) {
     originalImage.src = '';
     styleImage.src = '';
     
-    const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+    const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/' : '';
     const adjustPath = (path) => {
         if (!path) return '';
         if (basePath && !path.startsWith(basePath) && !path.startsWith('/')) {

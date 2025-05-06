@@ -1,6 +1,6 @@
 export class ManifestLoader {
     constructor() {
-        const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+        const basePath = window.location.hostname.includes('github.io') ? '/cpsc479/' : '';
         this.manifestPath = `${basePath}gallery/data/gallery-manifest.json`;
         this.manifest = null;
     }

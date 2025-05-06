@@ -6,7 +6,7 @@ export class ArtworkManager {
         this.scene = scene;
         this.loadingManager = loadingManager || new THREE.LoadingManager();
         this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-        this.basePath = window.location.hostname.includes('github.io') ? '/cpsc479/FP/' : '';
+        this.basePath = window.location.hostname.includes('github.io') ? '/cpsc479/' : '';
         this.styleTransferPath = `${this.basePath}model/results`;
         this.contentImagesPath = `${this.basePath}model/assets/input`;
         this.styleImagesPath = `${this.basePath}model/assets/reference`;
@@ -36,7 +36,7 @@ export class ArtworkManager {
         try {
             const styledImages = await this.manifestLoader.getAllStyledImages();
             
-            styledImages.forEach(imagePath => {
+            styledImages.filter(path => path).forEach(imagePath => {
                 if (imagePath.includes('_comparison')) {
                     return;
                 }
@@ -60,7 +60,7 @@ export class ArtworkManager {
                 `${this.styleTransferPath}/style_transfer_20250505_104421/0001_styled_with_0022.jpg`
             ];
             
-            fallbackImages.forEach(imagePath => {
+            fallbackImages.filter(path => path).forEach(imagePath => {
                 const parts = imagePath.split('/');
                 const filename = parts[parts.length - 1];
                 const match = filename.match(/(\d+)_styled_with_(\d+)/);
@@ -245,6 +245,12 @@ export class ArtworkManager {
 
     loadArtwork(imagePath, position, rotation, size) {
         return new Promise((resolve, reject) => {
+            if (!imagePath) {
+                console.error("Attempted to load undefined image path");
+                reject(new Error("Image path is undefined"));
+                return;
+            }
+            
             const adjustedPath = this.adjustPath(imagePath);
             console.log(`Loading image: ${adjustedPath}`);
             this.textureLoader.load(
@@ -389,13 +395,14 @@ export class ArtworkManager {
             let bestImages = [];
             try {
                 bestImages = await this.manifestLoader.getBestImages();
+                bestImages = bestImages.filter(path => path); // Filter out undefined/null values
             } catch (error) {
                 console.warn("Error loading best images, falling back to featured images");
             }
             
             const { featured, regular } = await this.getAllStyleTransferImages();
             
-            let processedBestImages = bestImages.map(path => {
+            let processedBestImages = bestImages.filter(path => path).map(path => {
                 if (path.startsWith('/gallery/')) {
                     return path.substring(1);
                 } else if (path.startsWith('/')) {
@@ -419,9 +426,9 @@ export class ArtworkManager {
                 const frontWallMax = 8;
                 const backWallMax = 8;
                 
-                const filteredBestImages = processedBestImages.filter(path => !path.includes('_comparison'));
-                const filteredFeatured = featured.filter(path => !path.includes('_comparison'));
-                const filteredRegular = regular.filter(path => !path.includes('_comparison'));
+                const filteredBestImages = processedBestImages.filter(path => path && !path.includes('_comparison'));
+                const filteredFeatured = featured.filter(path => path && !path.includes('_comparison'));
+                const filteredRegular = regular.filter(path => path && !path.includes('_comparison'));
                 
                 const allImages = [...filteredBestImages, ...filteredFeatured, ...filteredRegular];
                 console.log(`Total available unique images: ${allImages.length}`);
@@ -513,28 +520,28 @@ export class ArtworkManager {
             const imagesPerWall = 5;
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.north, 
-                regular.slice(startIndex, startIndex + imagesPerWall), 
+                regular.filter(path => path).slice(startIndex, startIndex + imagesPerWall), 
                 imagesPerWall
             ));
             startIndex += imagesPerWall;
             
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.south, 
-                regular.slice(startIndex, startIndex + imagesPerWall), 
+                regular.filter(path => path).slice(startIndex, startIndex + imagesPerWall), 
                 imagesPerWall
             ));
             startIndex += imagesPerWall;
             
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.east, 
-                regular.slice(startIndex, startIndex + imagesPerWall), 
+                regular.filter(path => path).slice(startIndex, startIndex + imagesPerWall), 
                 imagesPerWall
             ));
             startIndex += imagesPerWall;
             
             promises.push(...this.arrangeOuterWallArtworks(
                 wallsMap.west, 
-                regular.slice(startIndex, startIndex + imagesPerWall), 
+                regular.filter(path => path).slice(startIndex, startIndex + imagesPerWall), 
                 imagesPerWall
             ));
             
