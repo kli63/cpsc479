@@ -1,6 +1,6 @@
 export class ManifestLoader {
     constructor() {
-        this.manifestPath = './data/gallery-manifest.json';
+        this.manifestPath = 'gallery/data/gallery-manifest.json';
         this.manifest = null;
     }
 
@@ -14,7 +14,17 @@ export class ManifestLoader {
             if (!response.ok) {
                 throw new Error(`Failed to load manifest: ${response.status} ${response.statusText}`);
             }
-            this.manifest = await response.json();
+            const manifest = await response.json();
+            
+            this.manifest = {
+                ...manifest,
+                contentImages: manifest.contentImages?.map(path => path.startsWith('/') ? path.substring(1) : path) || [],
+                styleImages: manifest.styleImages?.map(path => path.startsWith('/') ? path.substring(1) : path) || [],
+                presetResults: manifest.presetResults?.map(path => path.startsWith('/') ? path.substring(1) : path) || [],
+                customResults: manifest.customResults?.map(path => path.startsWith('/') ? path.substring(1) : path) || [],
+                bestResults: manifest.bestResults?.map(path => path.startsWith('/') ? path.substring(1) : path) || []
+            };
+            
             console.log('Gallery manifest loaded successfully');
             return this.manifest;
         } catch (error) {
@@ -24,7 +34,8 @@ export class ManifestLoader {
                 contentImages: [],
                 styleImages: [],
                 presetResults: [],
-                customResults: []
+                customResults: [],
+                bestResults: []
             };
             return this.manifest;
         }

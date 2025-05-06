@@ -7,12 +7,12 @@ This repository contains a wavelet-based style transfer model for image enhancem
 To view style transfer results in the 3D gallery:
 
 ```bash
-# Start from the gallery directory
-cd path/to/CPSC479/FP/gallery
+# Start from the project root directory
+cd path/to/CPSC479/FP
 ./start-gallery.sh
 
 # Open in browser
-http://localhost:8000/gallery/
+http://localhost:8000/
 ```
 
 ## Directory Structure

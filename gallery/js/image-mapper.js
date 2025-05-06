@@ -1,9 +1,9 @@
 export class ImageMapper {
     constructor() {
         this.mappings = new Map();
-        this.styleResultsPath = '../model/results';
-        this.inputImagesPath = '../model/assets/input';
-        this.referencePath = '../model/assets/reference';
+        this.styleResultsPath = 'model/results';
+        this.inputImagesPath = 'model/assets/input';
+        this.referencePath = 'model/assets/reference';
         
         this.initializeMappings();
     }

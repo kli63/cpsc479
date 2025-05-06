@@ -6,10 +6,10 @@ export class ArtworkManager {
         this.scene = scene;
         this.loadingManager = loadingManager || new THREE.LoadingManager();
         this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-        this.styleTransferPath = '../model/results';
-        this.contentImagesPath = '../model/assets/input';
-        this.styleImagesPath = '../model/assets/reference';
-        this.bestImagesPath = './assets/best';
+        this.styleTransferPath = 'model/results';
+        this.contentImagesPath = 'model/assets/input';
+        this.styleImagesPath = 'model/assets/reference';
+        this.bestImagesPath = 'gallery/assets/best';
         this.artworks = [];
         this.allowDuplicates = false;
         this.manifestLoader = new ManifestLoader();
@@ -26,7 +26,7 @@ export class ArtworkManager {
                     return;
                 }
                 
-                const relPath = imagePath.startsWith('/') ? `..${imagePath}` : imagePath;
+                const relPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
                 const parts = relPath.split('/');
                 const filename = parts[parts.length - 1];
                 const match = filename.match(/(\d+)_styled_with_(\d+)/) || 
@@ -56,9 +56,8 @@ export class ArtworkManager {
                 }
             });
         }
-        console.log(`Loaded ${uniqueImages.length} styled images from manifest and directory structure`);
-        
         const uniqueImages = Array.from(uniqueImagesMap.values());
+        console.log(`Loaded ${uniqueImages.length} styled images from manifest and directory structure`);
         
         const requiredFeaturedCount = 8; 
         const requiredRegularCount = 20;
@@ -104,8 +103,8 @@ export class ArtworkManager {
             const styleId = match[2];
             
             return {
-                contentImage: `../model/assets/input/${contentId}.jpg`,
-                styleImage: `../model/assets/reference/${styleId}.jpg`,
+                contentImage: `model/assets/input/${contentId}.jpg`,
+                styleImage: `model/assets/reference/${styleId}.jpg`,
                 comparisonImage: null
             };
         }
@@ -382,11 +381,9 @@ export class ArtworkManager {
             
             let processedBestImages = bestImages.map(path => {
                 if (path.startsWith('/gallery/')) {
-                    return path.replace('/gallery/', './');
+                    return path.substring(1);
                 } else if (path.startsWith('/')) {
-                    return `.${path}`;
-                } else if (!path.startsWith('./')) {
-                    return `./${path}`;
+                    return path.substring(1);
                 }
                 return path;
             });

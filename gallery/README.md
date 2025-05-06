@@ -1,6 +1,8 @@
 # 3D Virtual Gallery for Style Transfer Project
 
-This is a Three.js-based virtual gallery application designed to showcase the style transfer images from the computational photography project.
+This is a Three.js-based virtual gallery application designed to showcase the style transfer images from the computational photography project. 
+
+> **Note:** The main `index.html` entry point is located in the root directory for GitHub Pages compatibility. The gallery code itself is in this directory.
 
 ## Structure
 
@@ -17,11 +19,11 @@ This is a Three.js-based virtual gallery application designed to showcase the st
 To run the gallery:
 
 ```bash
-# Navigate to the gallery directory
-cd path/to/CPSC479/FP/gallery
+# Navigate to the project directory
+cd path/to/CPSC479/FP
 
 # Make the scripts executable (if needed)
-chmod +x start-gallery.sh update-gallery-manifest.sh
+chmod +x start-gallery.sh gallery/update-gallery-manifest.sh
 
 # Run the gallery
 ./start-gallery.sh
@@ -30,7 +32,7 @@ chmod +x start-gallery.sh update-gallery-manifest.sh
 This will:
 1. Generate a manifest file of all available images
 2. Start a local web server on port 8000
-3. Navigate to: http://localhost:8000/gallery/
+3. Navigate to: http://localhost:8000/
 
 ### GitHub Pages Hosting
 

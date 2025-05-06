@@ -19,14 +19,14 @@ This project combines wavelet-based neural style transfer with a 3D gallery to d
 To run the gallery:
 
 ```bash
-# Go to gallery directory
-cd path/to/CPSC479/FP/gallery
+# Navigate to project directory
+cd path/to/CPSC479/FP
 
 # Start
 ./start-gallery.sh
 
-# Open in browser
-http://localhost:8000/gallery/
+# Open in browser (automatically opens)
+http://localhost:8000/
 ```
 
 ## Gallery Features
